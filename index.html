@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brewed — Red Social de Recetas de Café</title>
+  <meta name="description" content="Comparte y descubre recetas de café con la comunidad." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="brand" id="btn-brand">
+      <svg class="brand-icon" viewBox="0 0 32 32" fill="none">
+        <path d="M6 10h20l-2 14H8L6 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M22 10c0-4 4-4 4-8M16 10c0-4 4-4 4-8M10 10c0-4 4-4 4-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-name">Brewed</span>
+    </div>
+    <button class="btn-primary" id="btn-new-recipe">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Nueva Receta
+    </button>
+  </header>
+
+  <!-- LOADING SPINNER -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Conectando con Supabase…</p>
+  </div>
+
+  <main>
+    <!-- FEED VIEW -->
+    <section id="view-feed" class="view active">
+      <div class="feed-hero">
+        <h1 class="hero-title">Comunidad <span class="accent">cafetera</span></h1>
+        <p class="hero-sub">Comparte tus recetas, descubre las de otros.</p>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-method="all">Todos</button>
+        <button class="filter-btn" data-method="Espresso">Espresso</button>
+        <button class="filter-btn" data-method="Pour Over">Pour Over</button>
+        <button class="filter-btn" data-method="French Press">French Press</button>
+        <button class="filter-btn" data-method="AeroPress">AeroPress</button>
+        <button class="filter-btn" data-method="Moka">Moka</button>
+        <button class="filter-btn" data-method="Cold Brew">Cold Brew</button>
+        <button class="filter-btn" data-method="Chemex">Chemex</button>
+        <button class="filter-btn" data-method="Sifón">Sifón</button>
+      </div>
+      <div id="recipe-grid" class="recipe-grid"></div>
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-icon">☕</div>
+        <h2>Sin recetas aún</h2>
+        <p>Sé el primero en compartir una receta con la comunidad.</p>
+        <button class="btn-primary" id="btn-empty-new">Nueva Receta</button>
+      </div>
+    </section>
+
+    <!-- FORM VIEW -->
+    <section id="view-form" class="view">
+      <div class="form-container">
+        <div class="form-header">
+          <button class="btn-back" id="btn-back">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M12 16l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Volver
+          </button>
+          <h2 id="form-title">Nueva Receta</h2>
+        </div>
+
+        <form id="recipe-form" novalidate>
+          <input type="hidden" id="field-id" />
+
+          <div class="form-section">
+            <h3 class="section-label"><span class="section-icon">📋</span> Información General</h3>
+            <div class="field-group">
+              <label for="field-name">Nombre de la receta *</label>
+              <input type="text" id="field-name" placeholder="Ej. V60 Etiopía Yirgacheffe" required />
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label for="field-method">Método de preparación *</label>
+                <div class="custom-select">
+                  <select id="field-method" required>
+                    <option value="">Seleccionar…</option>
+                    <option>Espresso</option><option>Pour Over</option><option>French Press</option>
+                    <option>AeroPress</option><option>Moka</option><option>Cold Brew</option>
+                    <option>Chemex</option><option>Sifón</option><option>Drip / Cafetera</option><option>Otro</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-date">Fecha</label>
+                <input type="date" id="field-date" />
+              </div>
+            </div>
+            <div class="field-group">
+              <label for="field-notes">Notas generales</label>
+              <textarea id="field-notes" rows="2" placeholder="Tus impresiones, sabores percibidos…"></textarea>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label"><span class="section-icon">🫘</span> El Café</h3>
+            <div class="field-row">
+              <div class="field-group">
+                <label for="field-coffee-name">Nombre / Variedad</label>
+                <input type="text" id="field-coffee-name" placeholder="Ej. Etiopía Yirgacheffe" />
+              </div>
+              <div class="field-group">
+                <label for="field-origin">Origen</label>
+                <input type="text" id="field-origin" placeholder="Ej. Etiopía, Colombia…" />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label for="field-roaster">Tostador</label>
+                <input type="text" id="field-roaster" placeholder="Ej. Método Café" />
+              </div>
+              <div class="field-group">
+                <label for="field-process">Proceso</label>
+                <div class="custom-select">
+                  <select id="field-process">
+                    <option value="">Seleccionar…</option>
+                    <option>Lavado</option><option>Natural</option><option>Honey</option>
+                    <option>Anaeróbico</option><option>Otro</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Nivel de tueste</label>
+              <div class="roast-selector">
+                <label class="roast-option"><input type="radio" name="roast" value="Claro" /><span class="roast-badge light">Claro</span></label>
+                <label class="roast-option"><input type="radio" name="roast" value="Medio-Claro" /><span class="roast-badge medium-light">Medio-Claro</span></label>
+                <label class="roast-option"><input type="radio" name="roast" value="Medio" /><span class="roast-badge medium">Medio</span></label>
+                <label class="roast-option"><input type="radio" name="roast" value="Medio-Oscuro" /><span class="roast-badge medium-dark">Medio-Oscuro</span></label>
+                <label class="roast-option"><input type="radio" name="roast" value="Oscuro" /><span class="roast-badge dark">Oscuro</span></label>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Foto del café</label>
+              <div class="photo-upload" id="photo-drop">
+                <input type="file" id="field-photo" accept="image/*" hidden />
+                <div class="photo-prompt" id="photo-prompt">
+                  <svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h2l2-2h6l2 2h2a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+                  <p>Haz clic o arrastra una imagen</p>
+                </div>
+                <img id="photo-preview" class="photo-preview hidden" alt="Vista previa" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label"><span class="section-icon">⚙️</span> Molienda</h3>
+            <div class="field-row">
+              <div class="field-group">
+                <label for="field-grinder">Tipo de molino</label>
+                <div class="custom-select">
+                  <select id="field-grinder">
+                    <option value="">Seleccionar…</option>
+                    <option>Burr (plano)</option><option>Burr (cónico)</option><option>Cuchillas</option>
+                    <option>Manual</option><option>Rodillos</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-grinder-model">Modelo del molino</label>
+                <input type="text" id="field-grinder-model" placeholder="Ej. Timemore C3, Baratza…" />
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Nivel de molienda</label>
+              <div class="grind-slider-wrap">
+                <div class="grind-labels">
+                  <span>Muy Fino</span><span>Fino</span><span>Medio</span><span>Grueso</span><span>Muy Grueso</span>
+                </div>
+                <input type="range" id="field-grind-level" min="1" max="10" value="5" class="grind-slider" />
+                <div class="grind-value-display">
+                  <span id="grind-label-text">Medio</span>
+                  <span class="grind-number" id="grind-number">5/10</span>
+                </div>
+              </div>
+              <div class="field-group" style="margin-top:0.75rem">
+                <label for="field-grind-setting">Ajuste del molino (clicks / setting)</label>
+                <input type="text" id="field-grind-setting" placeholder="Ej. 15 clicks, setting 20" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label"><span class="section-icon">💧</span> Parámetros del Agua</h3>
+            <div class="field-row">
+              <div class="field-group">
+                <label>Temperatura</label>
+                <div class="temp-input-wrap">
+                  <input type="number" id="field-temp" min="0" max="120" placeholder="93" />
+                  <div class="temp-toggle">
+                    <button type="button" class="temp-btn active" data-unit="C">°C</button>
+                    <button type="button" class="temp-btn" data-unit="F">°F</button>
+                  </div>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-water-quality">Calidad del agua</label>
+                <div class="custom-select">
+                  <select id="field-water-quality">
+                    <option value="">Seleccionar…</option>
+                    <option>Filtrada</option><option>de Botella</option><option>Destilada</option><option>de Llave</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label"><span class="section-icon">⚖️</span> Dosis y Ratio</h3>
+            <div class="field-row ratio-row">
+              <div class="field-group">
+                <label for="field-coffee-grams">Café (g) *</label>
+                <input type="number" id="field-coffee-grams" min="0" step="0.1" placeholder="18" required />
+              </div>
+              <div class="ratio-display-wrap">
+                <div class="ratio-display">
+                  <span class="ratio-label">Ratio</span>
+                  <span class="ratio-value" id="ratio-value">—</span>
+                  <span class="ratio-unit">1 : X</span>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-water-grams">Agua (g) *</label>
+                <input type="number" id="field-water-grams" min="0" step="1" placeholder="300" required />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field-group">
+                <label for="field-yield-grams">Rendimiento / taza (g)</label>
+                <input type="number" id="field-yield-grams" min="0" step="1" placeholder="250" />
+              </div>
+              <div class="field-group">
+                <label for="field-total-time">Tiempo total de extracción</label>
+                <input type="text" id="field-total-time" placeholder="Ej. 3:30 min" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3 class="section-label">
+              <span class="section-icon">📍</span> Etapas de Vertido
+              <button type="button" class="btn-add-stage" id="btn-add-stage">
+                <svg viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Agregar Etapa
+              </button>
+            </h3>
+            <div id="stages-container" class="stages-container"></div>
+            <p class="stages-hint" id="stages-hint">Sin etapas. Haz clic en "Agregar Etapa" para detallar tu vertido.</p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="btn-cancel">Cancelar</button>
+            <button type="submit" class="btn-primary btn-save" id="btn-save">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M5 10l4.5 4.5L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Publicar Receta
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- DETAIL MODAL -->
+  <div id="detail-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button class="modal-close" id="btn-modal-close" aria-label="Cerrar">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div id="modal-photo-wrap" class="modal-photo-wrap hidden">
+        <img id="modal-photo" class="modal-photo" alt="Foto del café" />
+        <div class="modal-photo-gradient"></div>
+      </div>
+      <div class="modal-content">
+        <div class="modal-top">
+          <div>
+            <div class="modal-method-badge" id="modal-method-badge"></div>
+            <h2 class="modal-title" id="modal-title"></h2>
+            <div class="modal-meta" id="modal-meta"></div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-icon btn-like" id="btn-modal-like" title="Me gusta">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </button>
+            <span class="like-count" id="modal-like-count">0</span>
+            <button class="btn-icon btn-edit" id="btn-modal-edit" title="Editar">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M14.7 3.3a1 1 0 011.4 1.4L7 13.8l-3.5.7.7-3.5 9.5-7.7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="btn-icon btn-delete" id="btn-modal-delete" title="Eliminar">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M4 5h12M8 5V3h4v2M6 5l1 11h6l1-11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="params-grid" id="modal-params"></div>
+        <div id="modal-stages-wrap" class="modal-stages-wrap hidden">
+          <h3 class="modal-section-title">Etapas de Vertido</h3>
+          <div class="stages-timeline" id="modal-stages"></div>
+        </div>
+        <div id="modal-notes-wrap" class="modal-notes-wrap hidden">
+          <h3 class="modal-section-title">Notas</h3>
+          <p class="modal-notes-text" id="modal-notes-text"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" role="alert"></div>
+
+  <!-- CONFIRM -->
+  <div id="confirm-overlay" class="modal-overlay hidden">
+    <div class="confirm-card">
+      <h3>¿Eliminar receta?</h3>
+      <p>Esta acción no se puede deshacer.</p>
+      <div class="confirm-actions">
+        <button class="btn-secondary" id="btn-confirm-cancel">Cancelar</button>
+        <button class="btn-danger" id="btn-confirm-ok">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
