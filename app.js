@@ -91,6 +91,7 @@ document.getElementById('btn-logout').addEventListener('click',async()=>{
 });
 
 // Auth state listener — MUST be synchronous to avoid Supabase lock timeout
+let authHandled=false;
 sb.auth.onAuthStateChange((event,session)=>{
   // Defer all async work to avoid blocking the auth lock
   handleAuthChange(event,session);
@@ -99,6 +100,9 @@ sb.auth.onAuthStateChange((event,session)=>{
 async function handleAuthChange(event,session){
   try{
     if(session?.user){
+      // Prevent re-entry if same user already loaded (INITIAL_SESSION + SIGNED_IN fire back-to-back)
+      if(authHandled && currentUser?.id===session.user.id) return;
+      authHandled=true;
       currentUser=session.user;
       // Try loading existing profile — use maybeSingle to avoid 406 on 0 rows
       let{data}=await sb.from('perfiles').select('*').eq('id',currentUser.id).maybeSingle();
@@ -120,11 +124,13 @@ async function handleAuthChange(event,session){
       currentProfile=data;
       enterApp();
     }else{
+      authHandled=false;
       currentUser=null;currentProfile=null;
       exitApp();
     }
   }catch(err){
     console.error('Auth state change error:',err);
+    authHandled=false;
     exitApp();
   }
 }
@@ -262,25 +268,40 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
 const grid=document.getElementById('recipe-grid');
 const emptyState=document.getElementById('empty-state');
 let activeFilter='all',activeFeedMode='global',profilesCache={};
+let renderVersion=0; // Guard against concurrent renders
 
 async function getProfile(pid){if(!pid)return null;if(profilesCache[pid])return profilesCache[pid];const p=await UserStore.getById(pid);if(p)profilesCache[pid]=p;return p;}
 
 async function renderFeed(filter){
-  activeFilter=filter??activeFilter;showSkeleton();grid.innerHTML='';emptyState.classList.add('hidden');
+  activeFilter=filter??activeFilter;
+  const myVersion=++renderVersion; // Increment version to cancel stale renders
+  showSkeleton();grid.innerHTML='';emptyState.classList.add('hidden');
   try{
     let followingIds=null;
     if(activeFeedMode==='following'){
       followingIds=await FollowStore.myFollowingIds();
       if(followingIds.length===0){hideSkeleton();document.getElementById('empty-title').textContent='Sin recetas de seguidos';document.getElementById('empty-sub').textContent='Sigue a otros usuarios para ver sus recetas aquí.';emptyState.classList.remove('hidden');grid.style.display='none';return;}
     }
+    if(myVersion!==renderVersion)return; // Another render started, abort this one
     const recipes=await RecipeStore.all(activeFilter,activeFeedMode,followingIds);
+    if(myVersion!==renderVersion)return; // Check again after async
     const pids=[...new Set(recipes.map(r=>r.perfil_id).filter(Boolean))];
     await Promise.all(pids.map(pid=>getProfile(pid)));
     const likeCounts=await Promise.all(recipes.map(r=>LikeStore.count(r.id)));
     const myLikes=uid()?await Promise.all(recipes.map(r=>LikeStore.isLiked(r.id))):recipes.map(()=>false);
+    if(myVersion!==renderVersion)return; // Final check before DOM mutation
     hideSkeleton();
+    grid.innerHTML=''; // Clear again before painting (safety)
     if(recipes.length===0){document.getElementById('empty-title').textContent='Sin recetas aún';document.getElementById('empty-sub').textContent='Sé el primero en compartir una receta.';emptyState.classList.remove('hidden');grid.style.display='none';}
-    else{emptyState.classList.add('hidden');grid.style.display='';recipes.forEach((r,i)=>grid.appendChild(buildCard(r,profilesCache[r.perfil_id],likeCounts[i],myLikes[i])));}
+    else{
+      emptyState.classList.add('hidden');grid.style.display='';
+      const renderedIds=new Set();
+      recipes.forEach((r,i)=>{
+        if(renderedIds.has(r.id))return; // Skip duplicate IDs
+        renderedIds.add(r.id);
+        grid.appendChild(buildCard(r,profilesCache[r.perfil_id],likeCounts[i],myLikes[i]));
+      });
+    }
   }catch(err){console.error(err);hideSkeleton();showToast('Error cargando feed','error');}
 }
 
