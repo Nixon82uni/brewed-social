@@ -11,13 +11,39 @@
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <header class="navbar">
+  <!-- ═══ AUTH VIEW ═══ -->
+  <section id="view-auth" class="view active">
+    <div class="auth-container">
+      <div class="auth-brand">
+        <svg class="auth-brand-icon" viewBox="0 0 32 32" fill="none"><path d="M6 10h20l-2 14H8L6 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M22 10c0-4 4-4 4-8M16 10c0-4 4-4 4-8M10 10c0-4 4-4 4-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <h1 class="auth-brand-name">Brewed</h1>
+        <p class="auth-brand-sub">Comunidad cafetera</p>
+      </div>
+      <!-- LOGIN -->
+      <form id="login-form" class="auth-card">
+        <h2>Iniciar Sesión</h2>
+        <div class="field-group"><label for="login-email">Email</label><input type="email" id="login-email" placeholder="tu@email.com" required /></div>
+        <div class="field-group"><label for="login-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••••" required minlength="6" /></div>
+        <button type="submit" class="btn-primary btn-auth">Entrar</button>
+        <p class="auth-switch">¿No tienes cuenta? <button type="button" id="show-register">Regístrate</button></p>
+      </form>
+      <!-- REGISTER -->
+      <form id="register-form" class="auth-card hidden">
+        <h2>Crear Cuenta</h2>
+        <div class="field-group"><label for="reg-email">Email</label><input type="email" id="reg-email" placeholder="tu@email.com" required /></div>
+        <div class="field-group"><label for="reg-pass">Contraseña</label><input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" required minlength="6" /></div>
+        <div class="field-group"><label for="reg-username">Username</label><input type="text" id="reg-username" placeholder="ej. cafeconleche" required maxlength="24" /></div>
+        <div class="field-group"><label for="reg-displayname">Nombre visible</label><input type="text" id="reg-displayname" placeholder="Ej. Carlos García" required /></div>
+        <button type="submit" class="btn-primary btn-auth">Crear Cuenta</button>
+        <p class="auth-switch">¿Ya tienes cuenta? <button type="button" id="show-login">Inicia Sesión</button></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- NAVBAR (hidden until auth) -->
+  <header class="navbar hidden" id="main-navbar">
     <div class="brand" id="btn-brand">
-      <svg class="brand-icon" viewBox="0 0 32 32" fill="none">
-        <path d="M6 10h20l-2 14H8L6 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-        <path d="M22 10c0-4 4-4 4-8M16 10c0-4 4-4 4-8M10 10c0-4 4-4 4-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
+      <svg class="brand-icon" viewBox="0 0 32 32" fill="none"><path d="M6 10h20l-2 14H8L6 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M22 10c0-4 4-4 4-8M16 10c0-4 4-4 4-8M10 10c0-4 4-4 4-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       <span class="brand-name">Brewed</span>
     </div>
     <nav class="nav-links">
@@ -39,6 +65,9 @@
         <img id="nav-avatar" class="nav-avatar" src="" alt="" />
         <span id="nav-avatar-fallback" class="nav-avatar-fallback">?</span>
       </button>
+      <button class="btn-logout" id="btn-logout" title="Cerrar sesión">
+        <svg viewBox="0 0 20 20" fill="none"><path d="M7 17H4a1 1 0 01-1-1V4a1 1 0 011-1h3M14 14l3-3-3-3M8 11h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>
   </header>
 
@@ -47,12 +76,11 @@
 
   <main>
     <!-- ═══ FEED VIEW ═══ -->
-    <section id="view-feed" class="view active">
+    <section id="view-feed" class="view">
       <div class="feed-hero">
         <h1 class="hero-title">Comunidad <span class="accent">cafetera</span></h1>
         <p class="hero-sub">Comparte tus recetas, descubre las de otros.</p>
       </div>
-      <!-- Feed tabs -->
       <div class="feed-tabs">
         <button class="feed-tab active" data-feed="global" id="tab-global">🌍 Global</button>
         <button class="feed-tab" data-feed="following" id="tab-following">👥 Siguiendo</button>
@@ -68,7 +96,6 @@
         <button class="filter-btn" data-method="Chemex">Chemex</button>
         <button class="filter-btn" data-method="Sifón">Sifón</button>
       </div>
-      <!-- Skeleton grid -->
       <div id="skeleton-grid" class="recipe-grid skeleton-grid hidden">
         <div class="skeleton-card"><div class="sk-photo"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-params"><div class="sk-chip"></div><div class="sk-chip"></div><div class="sk-chip"></div></div></div></div>
         <div class="skeleton-card"><div class="sk-photo"></div><div class="sk-body"><div class="sk-line w70"></div><div class="sk-line w40"></div><div class="sk-params"><div class="sk-chip"></div><div class="sk-chip"></div><div class="sk-chip"></div></div></div></div>
@@ -96,9 +123,7 @@
           <button class="search-tab" data-target="users">Usuarios</button>
         </div>
         <div id="search-results" class="search-results"></div>
-        <div id="search-empty" class="search-empty hidden">
-          <p>Escribe algo para buscar…</p>
-        </div>
+        <div id="search-empty" class="search-empty hidden"><p>Escribe algo para buscar…</p></div>
       </div>
     </section>
 
@@ -111,6 +136,15 @@
         </div>
         <form id="recipe-form" novalidate>
           <input type="hidden" id="field-id" />
+          <!-- Visibility -->
+          <div class="form-section">
+            <h3 class="section-label"><span class="section-icon">👁️</span> Visibilidad</h3>
+            <div class="visibility-selector">
+              <label class="vis-option"><input type="radio" name="visibility" value="publica" checked /><span class="vis-badge vis-public"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M2 8h12M8 2c2 2.5 2 9.5 0 12M8 2c-2 2.5-2 9.5 0 12" stroke="currentColor" stroke-width="1.2"/></svg>Pública</span></label>
+              <label class="vis-option"><input type="radio" name="visibility" value="seguidores" /><span class="vis-badge vis-followers"><svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1 14c0-3 2.5-5 5-5s5 2 5 5" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="5" r="1.8" stroke="currentColor" stroke-width="1.2"/><path d="M15 14c0-2.2-1.5-3.8-3-3.8" stroke="currentColor" stroke-width="1.2"/></svg>Seguidores</span></label>
+              <label class="vis-option"><input type="radio" name="visibility" value="privada" /><span class="vis-badge vis-private"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.2"/></svg>Privada</span></label>
+            </div>
+          </div>
           <div class="form-section">
             <h3 class="section-label"><span class="section-icon">📋</span> Información General</h3>
             <div class="field-group"><label for="field-name">Nombre de la receta *</label><input type="text" id="field-name" placeholder="Ej. V60 Etiopía Yirgacheffe" required /></div>
@@ -125,7 +159,7 @@
             <div class="field-row"><div class="field-group"><label for="field-coffee-name">Variedad</label><input type="text" id="field-coffee-name" placeholder="Ej. Yirgacheffe" /></div><div class="field-group"><label for="field-origin">Origen</label><input type="text" id="field-origin" placeholder="Ej. Etiopía" /></div></div>
             <div class="field-row"><div class="field-group"><label for="field-roaster">Tostador</label><input type="text" id="field-roaster" placeholder="Ej. Onyx" /></div><div class="field-group"><label for="field-process">Proceso</label><div class="custom-select"><select id="field-process"><option value="">Seleccionar…</option><option>Lavado</option><option>Natural</option><option>Honey</option><option>Anaeróbico</option><option>Otro</option></select></div></div></div>
             <div class="field-group"><label>Tueste</label><div class="roast-selector"><label class="roast-option"><input type="radio" name="roast" value="Claro" /><span class="roast-badge light">Claro</span></label><label class="roast-option"><input type="radio" name="roast" value="Medio-Claro" /><span class="roast-badge medium-light">Medio-Claro</span></label><label class="roast-option"><input type="radio" name="roast" value="Medio" /><span class="roast-badge medium">Medio</span></label><label class="roast-option"><input type="radio" name="roast" value="Medio-Oscuro" /><span class="roast-badge medium-dark">Medio-Oscuro</span></label><label class="roast-option"><input type="radio" name="roast" value="Oscuro" /><span class="roast-badge dark">Oscuro</span></label></div></div>
-            <div class="field-group"><label>Foto</label><div class="photo-upload" id="photo-drop"><input type="file" id="field-photo" accept="image/*" hidden /><div class="photo-prompt" id="photo-prompt"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h2l2-2h6l2 2h2a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3" stroke="currentColor" stroke-width="1.5"/></svg><p>Haz clic o arrastra una imagen</p></div><img id="photo-preview" class="photo-preview hidden" alt="Vista previa" /></div></div>
+            <div class="field-group"><label>Foto del café</label><div class="photo-upload" id="photo-drop"><input type="file" id="field-photo" accept="image/*" hidden /><div class="photo-prompt" id="photo-prompt"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h2l2-2h6l2 2h2a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="13" r="3" stroke="currentColor" stroke-width="1.5"/></svg><p>Haz clic o arrastra una imagen</p></div><img id="photo-preview" class="photo-preview hidden" alt="Vista previa" /></div></div>
           </div>
           <div class="form-section">
             <h3 class="section-label"><span class="section-icon">⚙️</span> Molienda</h3>
@@ -152,28 +186,6 @@
     </section>
   </main>
 
-  <!-- ═══ PROFILE SETUP MODAL ═══ -->
-  <div id="profile-setup-modal" class="modal-overlay hidden">
-    <div class="modal-card profile-card">
-      <div class="profile-setup-header">
-        <div class="profile-setup-icon">☕</div>
-        <h2>Bienvenido a Brewed</h2>
-        <p>Crea tu perfil para empezar</p>
-      </div>
-      <form id="profile-form" novalidate>
-        <div class="field-group"><label for="pf-username">Username *</label><input type="text" id="pf-username" placeholder="ej. cafeconleche" required maxlength="24" /></div>
-        <div class="field-group"><label for="pf-displayname">Nombre visible *</label><input type="text" id="pf-displayname" placeholder="Ej. Carlos García" required /></div>
-        <div class="field-group"><label for="pf-bio">Bio</label><textarea id="pf-bio" rows="2" placeholder="Algo sobre ti y tu café…"></textarea></div>
-        <div class="field-row">
-          <div class="field-group"><label for="pf-molino">Mi molino</label><input type="text" id="pf-molino" placeholder="Ej. Timemore C3" /></div>
-          <div class="field-group"><label for="pf-cafetera">Mi cafetera</label><input type="text" id="pf-cafetera" placeholder="Ej. Hario V60" /></div>
-        </div>
-        <div class="field-group"><label>Foto de perfil</label><div class="avatar-upload" id="avatar-drop"><input type="file" id="pf-photo" accept="image/*" hidden /><div class="avatar-prompt" id="avatar-prompt"><span>📷</span><p>Subir foto</p></div><img id="avatar-preview" class="avatar-preview-img hidden" alt="Avatar" /></div></div>
-        <button type="submit" class="btn-primary btn-save" style="width:100%">Crear Perfil</button>
-      </form>
-    </div>
-  </div>
-
   <!-- ═══ PROFILE VIEW MODAL ═══ -->
   <div id="profile-view-modal" class="modal-overlay hidden">
     <div class="modal-card profile-view-card">
@@ -189,9 +201,30 @@
           <div class="pv-stat"><span class="pv-stat-num" id="pv-followers">0</span><span class="pv-stat-label">Seguidores</span></div>
           <div class="pv-stat"><span class="pv-stat-num" id="pv-following-count">0</span><span class="pv-stat-label">Siguiendo</span></div>
         </div>
-        <button class="btn-follow" id="btn-follow">Seguir</button>
+        <div class="pv-actions">
+          <button class="btn-follow" id="btn-follow">Seguir</button>
+          <button class="btn-edit-profile hidden" id="btn-edit-profile">✏️ Editar Perfil</button>
+        </div>
       </div>
       <div class="pv-recipes" id="pv-recipes-grid"></div>
+    </div>
+  </div>
+
+  <!-- ═══ EDIT PROFILE MODAL ═══ -->
+  <div id="edit-profile-modal" class="modal-overlay hidden">
+    <div class="modal-card profile-card">
+      <button class="modal-close" id="btn-ep-close"><svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <h2 style="margin-bottom:1rem;">Editar Perfil</h2>
+      <form id="edit-profile-form" novalidate>
+        <div class="field-group"><label>Foto de perfil</label><div class="avatar-upload" id="ep-avatar-drop"><input type="file" id="ep-photo" accept="image/*" hidden /><div class="avatar-prompt" id="ep-avatar-prompt"><span>📷</span><p>Cambiar foto</p></div><img id="ep-avatar-preview" class="avatar-preview-img hidden" alt="Avatar" /></div></div>
+        <div class="field-group"><label for="ep-displayname">Nombre visible</label><input type="text" id="ep-displayname" required /></div>
+        <div class="field-group"><label for="ep-bio">Bio</label><textarea id="ep-bio" rows="2"></textarea></div>
+        <div class="field-row">
+          <div class="field-group"><label for="ep-molino">Mi molino</label><input type="text" id="ep-molino" /></div>
+          <div class="field-group"><label for="ep-cafetera">Mi cafetera</label><input type="text" id="ep-cafetera" /></div>
+        </div>
+        <button type="submit" class="btn-primary btn-save" style="width:100%">Guardar Cambios</button>
+      </form>
     </div>
   </div>
 
@@ -204,7 +237,7 @@
         <div class="modal-top">
           <div>
             <div class="modal-author" id="modal-author"></div>
-            <div class="modal-method-badge" id="modal-method-badge"></div>
+            <div class="modal-badges"><div class="modal-method-badge" id="modal-method-badge"></div><div class="modal-vis-badge" id="modal-vis-badge"></div></div>
             <h2 class="modal-title" id="modal-title"></h2>
             <div class="modal-meta" id="modal-meta"></div>
           </div>
@@ -218,7 +251,6 @@
         <div class="params-grid" id="modal-params"></div>
         <div id="modal-stages-wrap" class="modal-stages-wrap hidden"><h3 class="modal-section-title">Etapas de Vertido</h3><div class="stages-timeline" id="modal-stages"></div></div>
         <div id="modal-notes-wrap" class="modal-notes-wrap hidden"><h3 class="modal-section-title">Notas</h3><p class="modal-notes-text" id="modal-notes-text"></p></div>
-        <!-- COMMENTS -->
         <div class="comments-section">
           <h3 class="modal-section-title">Comentarios <span class="comment-count-badge" id="comment-count-badge">0</span></h3>
           <div id="comments-list" class="comments-list"></div>
