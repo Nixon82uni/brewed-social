@@ -237,9 +237,8 @@ const LikeStore = {
     if (existing?.length > 0) await sb.from('recipe_likes').delete().match({ receta_id: recetaId, perfil_id: uid() });
     else {
       await sb.from('recipe_likes').insert([{ receta_id: recetaId, perfil_id: uid() }]);
-      // Notify recipe owner
-      const recipe = await RecipeStore.get(recetaId);
-      if (recipe?.perfil_id) NotificationStore.create(recipe.perfil_id, 'like', recetaId);
+      // Notify recipe owner (fire-and-forget, must not crash toggle)
+      try { const recipe = await RecipeStore.get(recetaId); if (recipe?.perfil_id) NotificationStore.create(recipe.perfil_id, 'like', recetaId); } catch (e) { console.error('Like notification error:', e); }
     }
     const { count } = await sb.from('recipe_likes').select('*', { count: 'exact', head: true }).eq('receta_id', recetaId);
     return { liked: !(existing?.length > 0), count: count || 0 };
@@ -704,7 +703,18 @@ document.getElementById('btn-send-comment').addEventListener('click', async () =
   } catch (err) { showToast('Error enviando comentario', 'error'); }
 });
 document.getElementById('comment-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-comment').click(); } });
-document.getElementById('btn-modal-like').addEventListener('click', async () => { try { const res = await LikeStore.toggle(modalRecipeId); document.getElementById('modal-like-count').textContent = res.count; const btn = document.getElementById('btn-modal-like'); btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); } catch { showToast('Error', 'error'); } });
+document.getElementById('btn-modal-like').addEventListener('click', async () => { try { const res = await LikeStore.toggle(modalRecipeId); document.getElementById('modal-like-count').textContent = res.count; const btn = document.getElementById('btn-modal-like'); btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); syncCardLikeState(modalRecipeId, res.liked, res.count); } catch { showToast('Error', 'error'); } });
+
+// Sync feed card like button after modal toggle
+function syncCardLikeState(recipeId, isLiked, count) {
+  const card = grid.querySelector(`.recipe-card[data-id="${recipeId}"]`);
+  if (!card) return;
+  const btn = card.querySelector('.card-like-btn');
+  if (!btn) return;
+  btn.classList.toggle('liked', isLiked);
+  btn.querySelector('span').textContent = count;
+  btn.querySelector('svg path').setAttribute('fill', isLiked ? 'currentColor' : 'none');
+}
 
 function closeModal() { modal.classList.add('hidden'); document.body.style.overflow = ''; modalRecipeId = null; }
 document.getElementById('btn-modal-close').addEventListener('click', closeModal);
@@ -745,13 +755,20 @@ async function renderNotifications() {
   list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-3);font-size:0.85rem;">Cargando…</div>';
   try {
     const notifications = await NotificationStore.list();
+    // Auto-mark all as read on page open
+    const hasUnread = notifications.some(n => !n.read);
+    if (hasUnread) {
+      await NotificationStore.markAllRead();
+      notifications.forEach(n => n.read = true);
+      refreshNotifBadge();
+    }
     if (notifications.length === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
     list.innerHTML = notifications.map(n => {
       const actor = n.actor;
       const meta = NOTIF_TYPE_META[n.type] || { icon: '🔔', msg: (a) => `<strong>${esc(a)}</strong> interactuó contigo` };
       const recipeName = n.receta?.nombre || '';
-      return `<div class="notif-item${n.read ? '' : ' unread'}" data-nid="${n.id}" data-type="${n.type}" data-recipe="${n.recipe_id || ''}" data-actor="${actor?.id || ''}">
+      return `<div class="notif-item" data-nid="${n.id}" data-type="${n.type}" data-recipe="${n.recipe_id || ''}" data-actor="${actor?.id || ''}">
         <div class="notif-avatar">${actor?.foto_perfil ? `<img src="${actor.foto_perfil}" alt="">` : `<span>${(actor?.display_name || '?')[0].toUpperCase()}</span>`}<div class="notif-type-icon type-${n.type}">${meta.icon}</div></div>
         <div class="notif-body"><div class="notif-text">${meta.msg(actor?.display_name || 'Alguien', recipeName)}</div><div class="notif-time">${timeAgo(n.created_at)}</div></div>
       </div>`;
@@ -759,16 +776,9 @@ async function renderNotifications() {
 
     list.querySelectorAll('.notif-item').forEach(item => {
       item.addEventListener('click', async () => {
-        const nid = item.dataset.nid;
         const type = item.dataset.type;
         const recipeId = item.dataset.recipe;
         const actorId = item.dataset.actor;
-        // Mark as read
-        if (item.classList.contains('unread')) {
-          await NotificationStore.markRead(nid);
-          item.classList.remove('unread');
-          refreshNotifBadge();
-        }
         // Navigate
         if (type === 'follow' && actorId) openProfileView(actorId);
         else if (recipeId) openModal(recipeId);
