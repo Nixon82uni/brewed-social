@@ -441,7 +441,12 @@
           <button class="btn-edit-profile hidden" id="btn-edit-profile">✏️ Editar Perfil</button>
         </div>
       </div>
+      <div class="pv-tabs" id="pv-tabs">
+        <button class="pv-tab active" data-pv-tab="recipes">Recetas</button>
+        <button class="pv-tab" data-pv-tab="saved">🔖 Guardadas</button>
+      </div>
       <div class="pv-recipes" id="pv-recipes-grid"></div>
+      <div class="pv-recipes hidden" id="pv-saved-grid"></div>
     </div>
   </div>
 
@@ -512,6 +517,9 @@
                   stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
               </svg></button>
             <span class="like-count" id="modal-like-count">0</span>
+            <button class="btn-icon btn-save-recipe" id="btn-modal-save" title="Guardar"><svg viewBox="0 0 20 20" fill="none">
+                <path d="M5 2h10a1 1 0 011 1v15l-6-4-6 4V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+              </svg></button>
             <button class="btn-icon btn-edit" id="btn-modal-edit" title="Editar"><svg viewBox="0 0 20 20" fill="none">
                 <path d="M14.7 3.3a1 1 0 011.4 1.4L7 13.8l-3.5.7.7-3.5 9.5-7.7z" stroke="currentColor"
                   stroke-width="1.5" stroke-linejoin="round" />

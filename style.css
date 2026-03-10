@@ -2973,6 +2973,95 @@ select option {
   color: var(--text-3);
 }
 
+/* ═══ SAVE / BOOKMARK BUTTON ═══ */
+.card-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s;
+  padding: 0;
+}
+
+.card-save-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.card-save-btn:hover,
+.card-save-btn.saved {
+  color: var(--amber);
+}
+
+.card-save-btn.saved svg path {
+  fill: currentColor;
+}
+
+.card-save-btn.pulse {
+  animation: heartPulse 0.35s var(--ease);
+}
+
+.btn-icon.btn-save-recipe:hover,
+.btn-icon.btn-save-recipe.saved {
+  background: rgba(240, 168, 85, 0.15);
+  color: var(--amber);
+  border-color: rgba(240, 168, 85, 0.3);
+}
+
+.btn-icon.btn-save-recipe.saved svg path {
+  fill: currentColor;
+}
+
+/* ═══ PROFILE VIEW TABS ═══ */
+.pv-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.pv-tab {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pv-tab:hover {
+  color: var(--text-2);
+}
+
+.pv-tab.active {
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
+}
+
+.pv-saved-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-3);
+}
+
+.pv-saved-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pv-saved-empty p {
+  font-size: 0.85rem;
+}
+
 /* ═══ RESPONSIVE ═══ */
 @media (max-width: 600px) {
   .navbar {

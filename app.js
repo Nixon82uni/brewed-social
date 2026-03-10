@@ -265,6 +265,20 @@ const CommentLikeStore = {
   async isLiked(commentId) { if (!uid()) return false; const { data } = await sb.from('comment_likes').select('id').match({ comment_id: commentId, perfil_id: uid() }); return data && data.length > 0; },
 };
 
+const SaveStore = {
+  async toggle(recipeId) {
+    const { data: existing } = await sb.from('recipe_saves').select('id').match({ recipe_id: recipeId, perfil_id: uid() });
+    if (existing?.length > 0) await sb.from('recipe_saves').delete().match({ recipe_id: recipeId, perfil_id: uid() });
+    else await sb.from('recipe_saves').insert([{ recipe_id: recipeId, perfil_id: uid() }]);
+    return { saved: !(existing?.length > 0) };
+  },
+  async isSaved(recipeId) { if (!uid()) return false; const { data } = await sb.from('recipe_saves').select('id').match({ recipe_id: recipeId, perfil_id: uid() }); return data && data.length > 0; },
+  async savedByUser(pid) {
+    const { data } = await sb.from('recipe_saves').select('recipe_id, recetas!inner(*)').eq('perfil_id', pid).order('created_at', { ascending: false });
+    return (data || []).map(r => r.recetas).filter(Boolean);
+  }
+};
+
 const NotificationStore = {
   async create(userId, type, recipeId = null, commentId = null) {
     if (!uid() || userId === uid()) return; // Don't notify yourself
@@ -320,6 +334,7 @@ async function renderFeed(filter) {
     await Promise.all(pids.map(pid => getProfile(pid)));
     const likeCounts = await Promise.all(recipes.map(r => LikeStore.count(r.id)));
     const myLikes = uid() ? await Promise.all(recipes.map(r => LikeStore.isLiked(r.id))) : recipes.map(() => false);
+    const mySaves = uid() ? await Promise.all(recipes.map(r => SaveStore.isSaved(r.id))) : recipes.map(() => false);
     if (myVersion !== renderVersion) return; // Final check before DOM mutation
     hideSkeleton();
     grid.innerHTML = ''; // Clear again before painting (safety)
@@ -330,21 +345,22 @@ async function renderFeed(filter) {
       recipes.forEach((r, i) => {
         if (renderedIds.has(r.id)) return; // Skip duplicate IDs
         renderedIds.add(r.id);
-        grid.appendChild(buildCard(r, profilesCache[r.perfil_id], likeCounts[i], myLikes[i]));
+        grid.appendChild(buildCard(r, profilesCache[r.perfil_id], likeCounts[i], myLikes[i], mySaves[i]));
       });
     }
   } catch (err) { console.error(err); hideSkeleton(); showToast('Error cargando feed', 'error'); }
 }
 
-function buildCard(r, author, likeCount, isLiked) {
+function buildCard(r, author, likeCount, isLiked, isSaved) {
   const card = document.createElement('article'); card.className = 'recipe-card'; card.dataset.id = r.id;
   const cg = parseFloat(r.coffee_grams), wg = parseFloat(r.water_grams);
   const ratio = (cg > 0 && wg > 0) ? `1:${(wg / cg).toFixed(1)}` : '—';
   const authorHTML = author ? `<div class="card-author" data-uid="${author.id}"><div class="card-author-avatar">${author.foto_perfil ? `<img src="${author.foto_perfil}" alt="">` : `<span>${author.display_name[0].toUpperCase()}</span>`}</div><span class="card-author-name">${esc(author.display_name)}</span></div>` : '';
   const photoHTML = r.foto_url ? `<img class="card-photo" src="${r.foto_url}" alt="" loading="lazy"/>` : `<div class="card-photo-placeholder">☕</div>`;
 
-  card.innerHTML = `${photoHTML}<div class="card-body">${authorHTML}<div class="card-header"><div><div class="card-title">${esc(r.nombre)}</div>${(r.nombre_cafe || r.origen) ? `<div class="card-origin">${esc([r.nombre_cafe, r.origen].filter(Boolean).join(' · '))}</div>` : ''}</div><span class="card-method-badge">${esc(r.metodo || '')}</span></div><div class="card-params"><div class="card-param"><div class="card-param-label">Café</div><div class="card-param-value">${cg ? cg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Agua</div><div class="card-param-value">${wg ? wg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Ratio</div><div class="card-param-value">${ratio}</div></div><div class="card-param"><div class="card-param-label">Temp.</div><div class="card-param-value">${r.temperatura ? r.temperatura + '°C' : '—'}</div></div><div class="card-param"><div class="card-param-label">Tueste</div><div class="card-param-value">${esc(r.tueste || '—')}</div></div><div class="card-param"><div class="card-param-label">Molienda</div><div class="card-param-value">${r.clicks_molienda ? GRIND_LABELS[r.clicks_molienda] || r.clicks_molienda : '—'}</div></div></div><div class="card-footer"><span class="card-date">${timeAgo(r.created_at)}</span><div class="card-footer-right"><button class="card-like-btn${isLiked ? ' liked' : ''}" data-id="${r.id}"><svg viewBox="0 0 20 20" fill="${isLiked ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${likeCount}</span></button>${r.etapas?.length ? `<span class="card-stages-count">${r.etapas.length} etapa${r.etapas.length > 1 ? 's' : ''}</span>` : ''}</div></div></div>`;
+  card.innerHTML = `${photoHTML}<div class="card-body">${authorHTML}<div class="card-header"><div><div class="card-title">${esc(r.nombre)}</div>${(r.nombre_cafe || r.origen) ? `<div class="card-origin">${esc([r.nombre_cafe, r.origen].filter(Boolean).join(' · '))}</div>` : ''}</div><span class="card-method-badge">${esc(r.metodo || '')}</span></div><div class="card-params"><div class="card-param"><div class="card-param-label">Café</div><div class="card-param-value">${cg ? cg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Agua</div><div class="card-param-value">${wg ? wg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Ratio</div><div class="card-param-value">${ratio}</div></div><div class="card-param"><div class="card-param-label">Temp.</div><div class="card-param-value">${r.temperatura ? r.temperatura + '°C' : '—'}</div></div><div class="card-param"><div class="card-param-label">Tueste</div><div class="card-param-value">${esc(r.tueste || '—')}</div></div><div class="card-param"><div class="card-param-label">Molienda</div><div class="card-param-value">${r.clicks_molienda ? GRIND_LABELS[r.clicks_molienda] || r.clicks_molienda : '—'}</div></div></div><div class="card-footer"><span class="card-date">${timeAgo(r.created_at)}</span><div class="card-footer-right"><button class="card-save-btn${isSaved ? ' saved' : ''}" data-id="${r.id}" title="Guardar"><svg viewBox="0 0 20 20" fill="${isSaved ? 'currentColor' : 'none'}"><path d="M5 2h10a1 1 0 011 1v15l-6-4-6 4V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button><button class="card-like-btn${isLiked ? ' liked' : ''}" data-id="${r.id}"><svg viewBox="0 0 20 20" fill="${isLiked ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${likeCount}</span></button>${r.etapas?.length ? `<span class="card-stages-count">${r.etapas.length} etapa${r.etapas.length > 1 ? 's' : ''}</span>` : ''}</div></div></div>`;
 
+  card.querySelector('.card-save-btn').addEventListener('click', async e => { e.stopPropagation(); const btn = e.currentTarget; try { const res = await SaveStore.toggle(r.id); btn.classList.toggle('saved', res.saved); btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success'); } catch { showToast('Error', 'error'); } });
   card.querySelector('.card-like-btn').addEventListener('click', async e => { e.stopPropagation(); const btn = e.currentTarget; try { const res = await LikeStore.toggle(r.id); btn.querySelector('span').textContent = res.count; btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); } catch { showToast('Error', 'error'); } });
   const authorEl = card.querySelector('.card-author'); if (authorEl) authorEl.addEventListener('click', e => { e.stopPropagation(); openProfileView(authorEl.dataset.uid); });
   card.addEventListener('click', () => openModal(r.id));
@@ -417,14 +433,52 @@ async function openProfileView(id) {
       else { await FollowStore.follow(id); followBtn.textContent = 'Siguiendo'; followBtn.classList.add('following'); document.getElementById('pv-followers').textContent = parseInt(document.getElementById('pv-followers').textContent) + 1; }
     };
   }
+  // Profile tabs — only show Saved tab for own profile
+  const pvTabs = document.getElementById('pv-tabs');
+  const savedTab = pvTabs.querySelector('[data-pv-tab="saved"]');
+  if (isMe) savedTab.style.display = ''; else savedTab.style.display = 'none';
+  // Reset to Recipes tab
+  pvTabs.querySelectorAll('.pv-tab').forEach(t => t.classList.toggle('active', t.dataset.pvTab === 'recipes'));
+  document.getElementById('pv-recipes-grid').classList.remove('hidden');
+  document.getElementById('pv-saved-grid').classList.add('hidden');
+
   const rg = document.getElementById('pv-recipes-grid');
   rg.innerHTML = recipes.slice(0, 9).map(r => `<div class="pv-recipe-mini" data-id="${r.id}">${r.foto_url ? `<img src="${r.foto_url}" alt="">` : `<div class="pv-mini-ph">☕</div>`}<div class="pv-mini-name">${esc(r.nombre)}</div></div>`).join('');
   rg.querySelectorAll('.pv-recipe-mini').forEach(c => c.addEventListener('click', () => { closePV(); openModal(c.dataset.id); }));
+
+  // Load saved recipes if own profile
+  if (isMe) {
+    const sg = document.getElementById('pv-saved-grid');
+    const savedRecipes = await SaveStore.savedByUser(uid());
+    if (savedRecipes.length) {
+      sg.innerHTML = savedRecipes.slice(0, 9).map(r => `<div class="pv-recipe-mini" data-id="${r.id}">${r.foto_url ? `<img src="${r.foto_url}" alt="">` : `<div class="pv-mini-ph">☕</div>`}<div class="pv-mini-name">${esc(r.nombre)}</div></div>`).join('');
+      sg.querySelectorAll('.pv-recipe-mini').forEach(c => c.addEventListener('click', () => { closePV(); openModal(c.dataset.id); }));
+    } else {
+      sg.innerHTML = '<div class="pv-saved-empty"><div class="pv-saved-empty-icon">🔖</div><p>No has guardado recetas aún.</p></div>';
+    }
+  }
+
   pvModal.classList.remove('hidden'); document.body.style.overflow = 'hidden';
 }
 function closePV() { pvModal.classList.add('hidden'); document.body.style.overflow = ''; }
 document.getElementById('btn-pv-close').addEventListener('click', closePV);
 pvModal.addEventListener('click', e => { if (e.target === pvModal) closePV(); });
+
+// Profile tabs switching
+document.querySelectorAll('.pv-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.pv-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    const target = t.dataset.pvTab;
+    if (target === 'recipes') {
+      document.getElementById('pv-recipes-grid').classList.remove('hidden');
+      document.getElementById('pv-saved-grid').classList.add('hidden');
+    } else {
+      document.getElementById('pv-recipes-grid').classList.add('hidden');
+      document.getElementById('pv-saved-grid').classList.remove('hidden');
+    }
+  });
+});
 
 // ── User List Modal (Followers / Following) ───────────────
 const ulModal = document.getElementById('user-list-modal');
@@ -580,9 +634,10 @@ async function openModal(id) {
   const isOwner = r.perfil_id === uid();
   document.getElementById('btn-modal-edit').style.display = isOwner ? '' : 'none';
   document.getElementById('btn-modal-delete').style.display = isOwner ? '' : 'none';
-  const [likeCount, isLiked] = await Promise.all([LikeStore.count(id), LikeStore.isLiked(id)]);
+  const [likeCount, isLiked, isSaved] = await Promise.all([LikeStore.count(id), LikeStore.isLiked(id), SaveStore.isSaved(id)]);
   document.getElementById('modal-like-count').textContent = likeCount;
   const likeBtn = document.getElementById('btn-modal-like'); likeBtn.classList.toggle('liked', isLiked); likeBtn.querySelector('svg path').setAttribute('fill', isLiked ? 'currentColor' : 'none');
+  const saveBtn = document.getElementById('btn-modal-save'); saveBtn.classList.toggle('saved', isSaved); saveBtn.querySelector('svg path').setAttribute('fill', isSaved ? 'currentColor' : 'none');
   const mp = []; if (r.created_at) mp.push(fmtDate(r.created_at)); if (r.tostador) mp.push(r.tostador);
   document.getElementById('modal-meta').textContent = mp.join(' · ');
   const cg = parseFloat(r.coffee_grams), wg = parseFloat(r.water_grams); const ratio = (cg > 0 && wg > 0) ? `1:${(wg / cg).toFixed(1)}` : null;
@@ -704,6 +759,7 @@ document.getElementById('btn-send-comment').addEventListener('click', async () =
 });
 document.getElementById('comment-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-comment').click(); } });
 document.getElementById('btn-modal-like').addEventListener('click', async () => { try { const res = await LikeStore.toggle(modalRecipeId); document.getElementById('modal-like-count').textContent = res.count; const btn = document.getElementById('btn-modal-like'); btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); syncCardLikeState(modalRecipeId, res.liked, res.count); } catch { showToast('Error', 'error'); } });
+document.getElementById('btn-modal-save').addEventListener('click', async () => { try { const res = await SaveStore.toggle(modalRecipeId); const btn = document.getElementById('btn-modal-save'); btn.classList.toggle('saved', res.saved); btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); syncCardSaveState(modalRecipeId, res.saved); showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success'); } catch { showToast('Error', 'error'); } });
 
 // Sync feed card like button after modal toggle
 function syncCardLikeState(recipeId, isLiked, count) {
@@ -714,6 +770,16 @@ function syncCardLikeState(recipeId, isLiked, count) {
   btn.classList.toggle('liked', isLiked);
   btn.querySelector('span').textContent = count;
   btn.querySelector('svg path').setAttribute('fill', isLiked ? 'currentColor' : 'none');
+}
+
+// Sync feed card save button after modal toggle
+function syncCardSaveState(recipeId, isSaved) {
+  const card = grid.querySelector(`.recipe-card[data-id="${recipeId}"]`);
+  if (!card) return;
+  const btn = card.querySelector('.card-save-btn');
+  if (!btn) return;
+  btn.classList.toggle('saved', isSaved);
+  btn.querySelector('svg path').setAttribute('fill', isSaved ? 'currentColor' : 'none');
 }
 
 function closeModal() { modal.classList.add('hidden'); document.body.style.overflow = ''; modalRecipeId = null; }

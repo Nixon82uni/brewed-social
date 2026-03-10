@@ -57,3 +57,22 @@ ALTER TABLE comment_likes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "comment_likes_select" ON comment_likes FOR SELECT USING (true);
 CREATE POLICY "comment_likes_insert" ON comment_likes FOR INSERT WITH CHECK (auth.uid() = perfil_id);
 CREATE POLICY "comment_likes_delete" ON comment_likes FOR DELETE USING (auth.uid() = perfil_id);
+
+-- ── 4. Recipe saves / bookmarks ──────────────────────────
+CREATE TABLE IF NOT EXISTS recipe_saves (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  recipe_id   uuid NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
+  perfil_id   uuid NOT NULL REFERENCES perfiles(id) ON DELETE CASCADE,
+  created_at  timestamptz DEFAULT now(),
+  UNIQUE(recipe_id, perfil_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_recipe_saves_perfil ON recipe_saves(perfil_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_saves_recipe ON recipe_saves(recipe_id);
+
+ALTER TABLE recipe_saves ENABLE ROW LEVEL SECURITY;
+
+-- Only the saver can see their own saves
+CREATE POLICY "saves_select" ON recipe_saves FOR SELECT USING (auth.uid() = perfil_id);
+CREATE POLICY "saves_insert" ON recipe_saves FOR INSERT WITH CHECK (auth.uid() = perfil_id);
+CREATE POLICY "saves_delete" ON recipe_saves FOR DELETE USING (auth.uid() = perfil_id);
