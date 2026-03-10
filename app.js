@@ -225,7 +225,9 @@ const FollowStore = {
   async isFollowing(followingId) { if (!uid()) return false; const { data } = await sb.from('follows').select('id').match({ follower_id: uid(), following_id: followingId }); return data && data.length > 0; },
   async myFollowingIds() { if (!uid()) return []; const { data } = await sb.from('follows').select('following_id').eq('follower_id', uid()); return (data || []).map(r => r.following_id); },
   async followersCount(pid) { const { count } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', pid); return count || 0; },
-  async followingCount(pid) { const { count } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', pid); return count || 0; }
+  async followingCount(pid) { const { count } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', pid); return count || 0; },
+  async followersList(pid) { const { data } = await sb.from('follows').select('follower_id, perfiles!follows_follower_id_fkey(id,username,display_name,foto_perfil)').eq('following_id', pid); return (data || []).map(r => r.perfiles).filter(Boolean); },
+  async followingList(pid) { const { data } = await sb.from('follows').select('following_id, perfiles!follows_following_id_fkey(id,username,display_name,foto_perfil)').eq('follower_id', pid); return (data || []).map(r => r.perfiles).filter(Boolean); }
 };
 
 const LikeStore = {
@@ -367,12 +369,16 @@ async function openProfileView(id) {
   document.getElementById('pv-followers').textContent = followers;
   document.getElementById('pv-following-count').textContent = following;
 
+  // Make followers/following counts clickable
+  document.getElementById('pv-stat-followers').onclick = async () => { const users = await FollowStore.followersList(id); openUserListModal('Seguidores', users); };
+  document.getElementById('pv-stat-following').onclick = async () => { const users = await FollowStore.followingList(id); openUserListModal('Siguiendo', users); };
+
   const followBtn = document.getElementById('btn-follow');
   const editBtn = document.getElementById('btn-edit-profile');
   const isMe = uid() === id;
-  if (isMe) { followBtn.classList.add('hidden'); editBtn.classList.remove('hidden'); }
+  if (isMe) { followBtn.style.display = 'none'; editBtn.classList.remove('hidden'); }
   else {
-    editBtn.classList.add('hidden'); followBtn.classList.remove('hidden');
+    followBtn.style.display = ''; editBtn.classList.add('hidden'); followBtn.classList.remove('hidden');
     const isF = await FollowStore.isFollowing(id);
     followBtn.textContent = isF ? 'Siguiendo' : 'Seguir'; followBtn.className = `btn-follow${isF ? ' following' : ''}`;
     followBtn.onclick = async () => {
@@ -389,6 +395,24 @@ async function openProfileView(id) {
 function closePV() { pvModal.classList.add('hidden'); document.body.style.overflow = ''; }
 document.getElementById('btn-pv-close').addEventListener('click', closePV);
 pvModal.addEventListener('click', e => { if (e.target === pvModal) closePV(); });
+
+// ── User List Modal (Followers / Following) ───────────────
+const ulModal = document.getElementById('user-list-modal');
+function openUserListModal(title, users) {
+  document.getElementById('ul-title').textContent = title;
+  const list = document.getElementById('ul-list');
+  const empty = document.getElementById('ul-empty');
+  if (users.length === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); }
+  else {
+    empty.classList.add('hidden');
+    list.innerHTML = users.map(u => `<div class="ul-item" data-uid="${u.id}"><div class="ul-avatar">${u.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${(u.display_name || '?')[0].toUpperCase()}</span>`}</div><div class="ul-info"><div class="ul-name">${esc(u.display_name)}</div><div class="ul-username">@${esc(u.username)}</div></div></div>`).join('');
+    list.querySelectorAll('.ul-item').forEach(item => item.addEventListener('click', () => { closeUserListModal(); closePV(); openProfileView(item.dataset.uid); }));
+  }
+  ulModal.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+}
+function closeUserListModal() { ulModal.classList.add('hidden'); document.body.style.overflow = ''; }
+document.getElementById('btn-ul-close').addEventListener('click', closeUserListModal);
+ulModal.addEventListener('click', e => { if (e.target === ulModal) closeUserListModal(); });
 
 // ═══════════════════════════════════════════════════════════
 // EDIT PROFILE
@@ -570,7 +594,7 @@ document.getElementById('btn-brand').addEventListener('click', () => { closeModa
 document.getElementById('btn-back').addEventListener('click', () => showAppView('feed'));
 document.getElementById('btn-cancel').addEventListener('click', () => showAppView('feed'));
 document.getElementById('btn-profile').addEventListener('click', () => { if (uid()) openProfileView(uid()); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!confirmOverlay.classList.contains('hidden')) { confirmOverlay.classList.add('hidden'); return; } if (!modal.classList.contains('hidden')) { closeModal(); return; } if (!pvModal.classList.contains('hidden')) { closePV(); return; } if (!epModal.classList.contains('hidden')) { closeEP(); return; } } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!confirmOverlay.classList.contains('hidden')) { confirmOverlay.classList.add('hidden'); return; } if (!ulModal.classList.contains('hidden')) { closeUserListModal(); return; } if (!modal.classList.contains('hidden')) { closeModal(); return; } if (!pvModal.classList.contains('hidden')) { closePV(); return; } if (!epModal.classList.contains('hidden')) { closeEP(); return; } } });
 
 // ═══════════════════════════════════════════════════════════
 // INIT
