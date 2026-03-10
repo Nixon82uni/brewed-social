@@ -303,13 +303,19 @@ const CommentLikeStore = {
 const SaveStore = {
   async toggle(recipeId) {
     const { data: existing } = await sb.from('recipe_saves').select('id').match({ recipe_id: recipeId, perfil_id: uid() });
-    if (existing?.length > 0) await sb.from('recipe_saves').delete().match({ recipe_id: recipeId, perfil_id: uid() });
-    else await sb.from('recipe_saves').insert([{ recipe_id: recipeId, perfil_id: uid() }]);
-    return { saved: !(existing?.length > 0) };
+    if (existing?.length > 0) {
+      await sb.from('recipe_saves').delete().match({ recipe_id: recipeId, perfil_id: uid() });
+      return { saved: false };
+    } else {
+      const { error } = await sb.from('recipe_saves').insert([{ recipe_id: recipeId, perfil_id: uid() }]);
+      if (error) { console.error('Error saving recipe:', error); return { saved: false }; }
+      return { saved: true };
+    }
   },
   async isSaved(recipeId) { if (!uid()) return false; const { data } = await sb.from('recipe_saves').select('id').match({ recipe_id: recipeId, perfil_id: uid() }); return data && data.length > 0; },
   async savedByUser(pid) {
-    const { data } = await sb.from('recipe_saves').select('recipe_id, recetas!inner(*)').eq('perfil_id', pid).order('created_at', { ascending: false });
+    const { data, error } = await sb.from('recipe_saves').select('recipe_id, recetas!inner(*, perfiles(id, display_name, foto_perfil))').eq('perfil_id', pid).order('created_at', { ascending: false });
+    if (error) { console.error('Error fetching saved:', error); return []; }
     return (data || []).map(r => r.recetas).filter(Boolean);
   }
 };
