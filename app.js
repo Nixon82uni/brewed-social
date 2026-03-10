@@ -142,6 +142,7 @@ function enterApp() {
   showAppView('feed');
   updateNavAvatar();
   renderFeed();
+  refreshNotifBadge();
 }
 function exitApp() {
   document.getElementById('view-auth').classList.add('active');
@@ -220,7 +221,7 @@ const RecipeStore = {
 };
 
 const FollowStore = {
-  async follow(followingId) { if (followingId === uid()) return; const { error } = await sb.from('follows').insert([{ follower_id: uid(), following_id: followingId }]); if (error && error.code !== '23505') throw error; },
+  async follow(followingId) { if (followingId === uid()) return; const { error } = await sb.from('follows').insert([{ follower_id: uid(), following_id: followingId }]); if (error && error.code !== '23505') throw error; NotificationStore.create(followingId, 'follow'); },
   async unfollow(followingId) { await sb.from('follows').delete().match({ follower_id: uid(), following_id: followingId }); },
   async isFollowing(followingId) { if (!uid()) return false; const { data } = await sb.from('follows').select('id').match({ follower_id: uid(), following_id: followingId }); return data && data.length > 0; },
   async myFollowingIds() { if (!uid()) return []; const { data } = await sb.from('follows').select('following_id').eq('follower_id', uid()); return (data || []).map(r => r.following_id); },
@@ -234,17 +235,46 @@ const LikeStore = {
   async toggle(recetaId) {
     const { data: existing } = await sb.from('recipe_likes').select('id').match({ receta_id: recetaId, perfil_id: uid() });
     if (existing?.length > 0) await sb.from('recipe_likes').delete().match({ receta_id: recetaId, perfil_id: uid() });
-    else await sb.from('recipe_likes').insert([{ receta_id: recetaId, perfil_id: uid() }]);
+    else {
+      await sb.from('recipe_likes').insert([{ receta_id: recetaId, perfil_id: uid() }]);
+      // Notify recipe owner
+      const recipe = await RecipeStore.get(recetaId);
+      if (recipe?.perfil_id) NotificationStore.create(recipe.perfil_id, 'like', recetaId);
+    }
     const { count } = await sb.from('recipe_likes').select('*', { count: 'exact', head: true }).eq('receta_id', recetaId);
     return { liked: !(existing?.length > 0), count: count || 0 };
   },
   async count(recetaId) { const { count } = await sb.from('recipe_likes').select('*', { count: 'exact', head: true }).eq('receta_id', recetaId); return count || 0; },
-  async isLiked(recetaId) { if (!uid()) return false; const { data } = await sb.from('recipe_likes').select('id').match({ receta_id: recetaId, perfil_id: uid() }); return data && data.length > 0; }
+  async isLiked(recetaId) { if (!uid()) return false; const { data } = await sb.from('recipe_likes').select('id').match({ receta_id: recetaId, perfil_id: uid() }); return data && data.length > 0; },
+  async totalForUser(pid) { const { count } = await sb.from('recipe_likes').select('*, recetas!inner(perfil_id)', { count: 'exact', head: true }).eq('recetas.perfil_id', pid); return count || 0; }
 };
 
 const CommentStore = {
   async list(recetaId) { const { data } = await sb.from('comentarios').select('*, perfiles(id,username,display_name,foto_perfil)').eq('receta_id', recetaId).order('created_at', { ascending: true }); return data || []; },
-  async add(recetaId, contenido) { const { data, error } = await sb.from('comentarios').insert([{ receta_id: recetaId, perfil_id: uid(), contenido }]).select('*, perfiles(id,username,display_name,foto_perfil)'); if (error) throw error; return data?.[0]; },
+  async add(recetaId, contenido, parentId = null) { const row = { receta_id: recetaId, perfil_id: uid(), contenido }; if (parentId) row.parent_id = parentId; const { data, error } = await sb.from('comentarios').insert([row]).select('*, perfiles(id,username,display_name,foto_perfil)'); if (error) throw error; return data?.[0]; },
+};
+
+const CommentLikeStore = {
+  async toggle(commentId) {
+    const { data: existing } = await sb.from('comment_likes').select('id').match({ comment_id: commentId, perfil_id: uid() });
+    if (existing?.length > 0) await sb.from('comment_likes').delete().match({ comment_id: commentId, perfil_id: uid() });
+    else await sb.from('comment_likes').insert([{ comment_id: commentId, perfil_id: uid() }]);
+    const { count } = await sb.from('comment_likes').select('*', { count: 'exact', head: true }).eq('comment_id', commentId);
+    return { liked: !(existing?.length > 0), count: count || 0 };
+  },
+  async count(commentId) { const { count } = await sb.from('comment_likes').select('*', { count: 'exact', head: true }).eq('comment_id', commentId); return count || 0; },
+  async isLiked(commentId) { if (!uid()) return false; const { data } = await sb.from('comment_likes').select('id').match({ comment_id: commentId, perfil_id: uid() }); return data && data.length > 0; },
+};
+
+const NotificationStore = {
+  async create(userId, type, recipeId = null, commentId = null) {
+    if (!uid() || userId === uid()) return; // Don't notify yourself
+    try { await sb.from('notificaciones').insert([{ user_id: userId, actor_id: uid(), type, recipe_id: recipeId, comment_id: commentId }]); } catch (e) { console.error('Notification create error:', e); }
+  },
+  async list() { const { data } = await sb.from('notificaciones').select('*, actor:perfiles!notificaciones_actor_id_fkey(id,username,display_name,foto_perfil), receta:recetas!notificaciones_recipe_id_fkey(id,nombre)').eq('user_id', uid()).order('created_at', { ascending: false }).limit(50); return data || []; },
+  async unreadCount() { const { count } = await sb.from('notificaciones').select('*', { count: 'exact', head: true }).eq('user_id', uid()).eq('read', false); return count || 0; },
+  async markRead(id) { await sb.from('notificaciones').update({ read: true }).eq('id', id).eq('user_id', uid()); },
+  async markAllRead() { await sb.from('notificaciones').update({ read: true }).eq('user_id', uid()).eq('read', false); },
 };
 
 const UserStore = {
@@ -255,14 +285,14 @@ const UserStore = {
 // ═══════════════════════════════════════════════════════════
 // NAV & VIEWS
 // ═══════════════════════════════════════════════════════════
-const appViews = { feed: document.getElementById('view-feed'), form: document.getElementById('view-form'), search: document.getElementById('view-search') };
+const appViews = { feed: document.getElementById('view-feed'), form: document.getElementById('view-form'), search: document.getElementById('view-search'), notifications: document.getElementById('view-notifications') };
 function showAppView(name) {
   Object.values(appViews).forEach(v => v.classList.remove('active'));
   appViews[name].classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   window.scrollTo(0, 0);
 }
-document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => { showAppView(b.dataset.view); if (b.dataset.view === 'feed') renderFeed(); }));
+document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => { showAppView(b.dataset.view); if (b.dataset.view === 'feed') renderFeed(); if (b.dataset.view === 'notifications') renderNotifications(); }));
 
 // ═══════════════════════════════════════════════════════════
 // FEED
@@ -364,10 +394,11 @@ async function openProfileView(id) {
   document.getElementById('pv-bio').textContent = u.bio || '';
   const eq = []; if (u.equipo_molino) eq.push('⚙️ ' + u.equipo_molino); if (u.equipo_cafetera) eq.push('☕ ' + u.equipo_cafetera);
   document.getElementById('pv-equipment').innerHTML = eq.map(e => `<span class="pv-eq-tag">${esc(e)}</span>`).join('');
-  const [recipes, followers, following] = await Promise.all([RecipeStore.byUser(id), FollowStore.followersCount(id), FollowStore.followingCount(id)]);
+  const [recipes, followers, following, totalLikes] = await Promise.all([RecipeStore.byUser(id), FollowStore.followersCount(id), FollowStore.followingCount(id), LikeStore.totalForUser(id)]);
   document.getElementById('pv-recipes').textContent = recipes.length;
   document.getElementById('pv-followers').textContent = followers;
   document.getElementById('pv-following-count').textContent = following;
+  document.getElementById('pv-total-likes').textContent = totalLikes;
 
   // Make followers/following counts clickable
   document.getElementById('pv-stat-followers').onclick = async () => { const users = await FollowStore.followersList(id); openUserListModal('Seguidores', users); };
@@ -565,13 +596,113 @@ async function openModal(id) {
   modal.classList.remove('hidden'); document.body.style.overflow = 'hidden';
 }
 
+let replyToCommentId = null, replyToAuthorName = null;
+
+function setReplyTo(commentId, authorName) {
+  replyToCommentId = commentId;
+  replyToAuthorName = authorName;
+  const indicator = document.getElementById('comment-reply-indicator');
+  document.getElementById('comment-reply-to').textContent = `↩ Respondiendo a ${authorName}`;
+  indicator.classList.remove('hidden');
+  document.getElementById('comment-input').focus();
+  document.getElementById('comment-input').placeholder = `Responder a ${authorName}…`;
+}
+
+function clearReplyTo() {
+  replyToCommentId = null;
+  replyToAuthorName = null;
+  document.getElementById('comment-reply-indicator').classList.add('hidden');
+  document.getElementById('comment-input').placeholder = 'Escribe un comentario…';
+}
+
+document.getElementById('btn-cancel-reply').addEventListener('click', clearReplyTo);
+
 async function loadComments(recetaId) {
   const comments = await CommentStore.list(recetaId);
   document.getElementById('comment-count-badge').textContent = comments.length;
-  document.getElementById('comments-list').innerHTML = comments.map(c => { const u = c.perfiles; return `<div class="comment-item"><div class="comment-avatar">${u?.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${(u?.display_name || '?')[0].toUpperCase()}</span>`}</div><div class="comment-body"><div class="comment-header"><span class="comment-author">${esc(u?.display_name || 'Anónimo')}</span><span class="comment-time">${timeAgo(c.created_at)}</span></div><p class="comment-text">${esc(c.contenido)}</p></div></div>`; }).join('') || '<p class="no-comments">Sin comentarios aún. ¡Sé el primero!</p>';
+  // Fetch like data for each comment
+  const likeCounts = await Promise.all(comments.map(c => CommentLikeStore.count(c.id)));
+  const myCommentLikes = uid() ? await Promise.all(comments.map(c => CommentLikeStore.isLiked(c.id))) : comments.map(() => false);
+  // Separate parents and replies
+  const parents = comments.filter(c => !c.parent_id);
+  const repliesByParent = {};
+  comments.filter(c => c.parent_id).forEach(c => { (repliesByParent[c.parent_id] = repliesByParent[c.parent_id] || []).push(c); });
+  const commentIndexMap = {};
+  comments.forEach((c, i) => { commentIndexMap[c.id] = i; });
+
+  function renderComment(c, isReply) {
+    const u = c.perfiles;
+    const idx = commentIndexMap[c.id];
+    const lc = likeCounts[idx] || 0;
+    const il = myCommentLikes[idx] || false;
+    return `<div class="comment-item${isReply ? ' reply' : ''}" data-comment-id="${c.id}"><div class="comment-avatar">${u?.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${(u?.display_name || '?')[0].toUpperCase()}</span>`}</div><div class="comment-body"><div class="comment-header"><span class="comment-author">${esc(u?.display_name || 'Anónimo')}</span><span class="comment-time">${timeAgo(c.created_at)}</span></div><p class="comment-text">${esc(c.contenido)}</p><div class="comment-actions"><button class="comment-action-btn comment-like-btn${il ? ' liked' : ''}" data-cid="${c.id}"><svg viewBox="0 0 20 20" fill="${il ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${lc}</span></button><button class="comment-action-btn comment-reply-btn" data-cid="${c.id}" data-author="${esc(u?.display_name || 'Anónimo')}">Responder</button></div></div></div>`;
+  }
+
+  let html = '';
+  parents.forEach(c => {
+    html += renderComment(c, false);
+    (repliesByParent[c.id] || []).forEach(r => { html += renderComment(r, true); });
+  });
+  // Orphan replies (parent deleted)
+  comments.filter(c => c.parent_id && !comments.find(p => p.id === c.parent_id && !p.parent_id)).forEach(c => {
+    if (!parents.find(p => p.id === c.id) && !Object.values(repliesByParent).flat().find(r => r.id === c.id)) html += renderComment(c, true);
+  });
+
+  const list = document.getElementById('comments-list');
+  list.innerHTML = html || '<p class="no-comments">Sin comentarios aún. ¡Sé el primero!</p>';
+
+  // Attach comment like handlers
+  list.querySelectorAll('.comment-like-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const cid = btn.dataset.cid;
+        const res = await CommentLikeStore.toggle(cid);
+        btn.querySelector('span').textContent = res.count;
+        btn.classList.toggle('liked', res.liked);
+        btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+        // Notify comment author
+        if (res.liked) {
+          const comment = comments.find(c => c.id === cid);
+          if (comment?.perfil_id) NotificationStore.create(comment.perfil_id, 'comment_like', recetaId, cid);
+        }
+      } catch { showToast('Error', 'error'); }
+    });
+  });
+
+  // Attach reply handlers
+  list.querySelectorAll('.comment-reply-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setReplyTo(btn.dataset.cid, btn.dataset.author);
+    });
+  });
+
+  clearReplyTo();
 }
 
-document.getElementById('btn-send-comment').addEventListener('click', async () => { const input = document.getElementById('comment-input'); const t = input.value.trim(); if (!t) return; try { await CommentStore.add(modalRecipeId, t); input.value = ''; await loadComments(modalRecipeId); } catch (err) { showToast('Error enviando comentario', 'error'); } });
+document.getElementById('btn-send-comment').addEventListener('click', async () => {
+  const input = document.getElementById('comment-input');
+  const t = input.value.trim();
+  if (!t) return;
+  try {
+    const newComment = await CommentStore.add(modalRecipeId, t, replyToCommentId);
+    // Notify recipe owner (comment) or parent comment author (reply)
+    if (replyToCommentId) {
+      // Find the parent comment to get its author
+      const allComments = await CommentStore.list(modalRecipeId);
+      const parent = allComments.find(c => c.id === replyToCommentId);
+      if (parent?.perfil_id) NotificationStore.create(parent.perfil_id, 'reply', modalRecipeId, newComment?.id);
+    } else {
+      // Notify recipe owner
+      const recipe = await RecipeStore.get(modalRecipeId);
+      if (recipe?.perfil_id) NotificationStore.create(recipe.perfil_id, 'comment', modalRecipeId, newComment?.id);
+    }
+    input.value = '';
+    clearReplyTo();
+    await loadComments(modalRecipeId);
+  } catch (err) { showToast('Error enviando comentario', 'error'); }
+});
 document.getElementById('comment-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-comment').click(); } });
 document.getElementById('btn-modal-like').addEventListener('click', async () => { try { const res = await LikeStore.toggle(modalRecipeId); document.getElementById('modal-like-count').textContent = res.count; const btn = document.getElementById('btn-modal-like'); btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); } catch { showToast('Error', 'error'); } });
 
@@ -586,6 +717,74 @@ document.getElementById('btn-modal-delete').addEventListener('click', () => { pe
 document.getElementById('btn-confirm-cancel').addEventListener('click', () => { confirmOverlay.classList.add('hidden'); pendingDeleteId = null; });
 document.getElementById('btn-confirm-ok').addEventListener('click', async () => { if (pendingDeleteId) { try { await RecipeStore.delete(pendingDeleteId); confirmOverlay.classList.add('hidden'); closeModal(); await renderFeed(); showToast('Eliminada', 'error'); } catch { showToast('Error', 'error'); } } });
 confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) { confirmOverlay.classList.add('hidden'); pendingDeleteId = null; } });
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+const NOTIF_TYPE_META = {
+  follow: { icon: '👤', msg: (a) => `<strong>${esc(a)}</strong> te empezó a seguir` },
+  like: { icon: '❤️', msg: (a, r) => `<strong>${esc(a)}</strong> le dio like a <strong>${esc(r)}</strong>` },
+  comment: { icon: '💬', msg: (a, r) => `<strong>${esc(a)}</strong> comentó en <strong>${esc(r)}</strong>` },
+  reply: { icon: '↩️', msg: (a, r) => `<strong>${esc(a)}</strong> respondió a tu comentario en <strong>${esc(r)}</strong>` },
+  comment_like: { icon: '💜', msg: (a, r) => `<strong>${esc(a)}</strong> le gustó tu comentario en <strong>${esc(r)}</strong>` },
+};
+
+async function refreshNotifBadge() {
+  if (!uid()) return;
+  try {
+    const count = await NotificationStore.unreadCount();
+    const badge = document.getElementById('notif-badge');
+    if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+  } catch (e) { console.error('Badge refresh error:', e); }
+}
+
+async function renderNotifications() {
+  const list = document.getElementById('notif-list');
+  const empty = document.getElementById('notif-empty');
+  list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-3);font-size:0.85rem;">Cargando…</div>';
+  try {
+    const notifications = await NotificationStore.list();
+    if (notifications.length === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+    list.innerHTML = notifications.map(n => {
+      const actor = n.actor;
+      const meta = NOTIF_TYPE_META[n.type] || { icon: '🔔', msg: (a) => `<strong>${esc(a)}</strong> interactuó contigo` };
+      const recipeName = n.receta?.nombre || '';
+      return `<div class="notif-item${n.read ? '' : ' unread'}" data-nid="${n.id}" data-type="${n.type}" data-recipe="${n.recipe_id || ''}" data-actor="${actor?.id || ''}">
+        <div class="notif-avatar">${actor?.foto_perfil ? `<img src="${actor.foto_perfil}" alt="">` : `<span>${(actor?.display_name || '?')[0].toUpperCase()}</span>`}<div class="notif-type-icon type-${n.type}">${meta.icon}</div></div>
+        <div class="notif-body"><div class="notif-text">${meta.msg(actor?.display_name || 'Alguien', recipeName)}</div><div class="notif-time">${timeAgo(n.created_at)}</div></div>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('.notif-item').forEach(item => {
+      item.addEventListener('click', async () => {
+        const nid = item.dataset.nid;
+        const type = item.dataset.type;
+        const recipeId = item.dataset.recipe;
+        const actorId = item.dataset.actor;
+        // Mark as read
+        if (item.classList.contains('unread')) {
+          await NotificationStore.markRead(nid);
+          item.classList.remove('unread');
+          refreshNotifBadge();
+        }
+        // Navigate
+        if (type === 'follow' && actorId) openProfileView(actorId);
+        else if (recipeId) openModal(recipeId);
+      });
+    });
+  } catch (err) { console.error(err); list.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-3);">Error cargando notificaciones</div>'; }
+}
+
+document.getElementById('btn-mark-all-read').addEventListener('click', async () => {
+  try {
+    await NotificationStore.markAllRead();
+    document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+    refreshNotifBadge();
+    showToast('Todo marcado como leído', 'success');
+  } catch { showToast('Error', 'error'); }
+});
 
 // ── Nav ───────────────────────────────────────────────────
 document.getElementById('btn-new-recipe').addEventListener('click', openNewForm);
