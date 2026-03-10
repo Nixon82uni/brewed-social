@@ -214,6 +214,52 @@
           <button class="search-tab active" data-target="recipes">Recetas</button>
           <button class="search-tab" data-target="users">Usuarios</button>
         </div>
+        
+        <div id="advanced-filters" class="advanced-filters">
+          <div class="filter-group">
+            <select id="filter-method" class="search-select">
+              <option value="">Método (Todos)</option>
+              <option value="Espresso">Espresso</option>
+              <option value="Pour Over">Pour Over</option>
+              <option value="French Press">French Press</option>
+              <option value="AeroPress">AeroPress</option>
+              <option value="Moka">Moka</option>
+              <option value="Cold Brew">Cold Brew</option>
+              <option value="Chemex">Chemex</option>
+              <option value="Sifón">Sifón</option>
+              <option value="Drip / Cafetera">Drip / Cafetera</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <select id="filter-roast" class="search-select">
+              <option value="">Tueste (Todos)</option>
+              <option value="Claro">Claro</option>
+              <option value="Medio-Claro">Medio-Claro</option>
+              <option value="Medio">Medio</option>
+              <option value="Medio-Oscuro">Medio-Oscuro</option>
+              <option value="Oscuro">Oscuro</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <select id="filter-process" class="search-select">
+              <option value="">Proceso (Todos)</option>
+              <option value="Lavado">Lavado</option>
+              <option value="Natural">Natural</option>
+              <option value="Honey">Honey</option>
+              <option value="Anaeróbico">Anaeróbico</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <select id="filter-sort" class="search-select">
+              <option value="recent">Más recientes</option>
+              <option value="likes">Más likes</option>
+              <option value="comments">Más comentados</option>
+            </select>
+          </div>
+        </div>
+
         <div id="search-results" class="search-results"></div>
         <div id="search-empty" class="search-empty hidden">
           <p>Escribe algo para buscar…</p>

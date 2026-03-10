@@ -211,7 +211,42 @@ const RecipeStore = {
   async insert(r) { const { data, error } = await sb.from('recetas').insert([r]).select(); if (error) throw error; return data?.[0]; },
   async update(id, f) { const { data, error } = await sb.from('recetas').update(f).eq('id', id).select(); if (error) throw error; return data?.[0]; },
   async delete(id) { const { error } = await sb.from('recetas').delete().eq('id', id); if (error) throw error; },
-  async search(q) { const { data } = await sb.from('recetas').select('*').eq('visibilidad', 'publica').or(`nombre.ilike.%${q}%,metodo.ilike.%${q}%,nombre_cafe.ilike.%${q}%,origen.ilike.%${q}%`).order('created_at', { ascending: false }).limit(30); return data || []; },
+  async search(filters) {
+    const { q, method, roast, process, sortBy } = filters;
+    let query = sb.from('recetas').select('*').eq('visibilidad', 'publica');
+    
+    // Apply filters
+    if (q) {
+      query = query.or(`nombre.ilike.%${q}%,metodo.ilike.%${q}%,nombre_cafe.ilike.%${q}%,origen.ilike.%${q}%`);
+    }
+    if (method) query = query.eq('metodo', method);
+    if (roast) query = query.eq('tueste', roast);
+    if (process) query = query.eq('proceso', process);
+    
+    // We fetch more if we need to sort by likes/comments in JS to ensure accuracy
+    query = query.order('created_at', { ascending: false }).limit(sortBy === 'recent' ? 30 : 100);
+    
+    const { data } = await query;
+    if (!data || data.length === 0) return [];
+
+    if (sortBy === 'recent') return data;
+
+    // Fetch counts for sorting
+    const ids = data.map(r => r.id);
+    if (sortBy === 'likes') {
+      const { data: likesData } = await sb.from('recipe_likes').select('receta_id').in('receta_id', ids);
+      const counts = {};
+      (likesData || []).forEach(l => counts[l.receta_id] = (counts[l.receta_id] || 0) + 1);
+      return data.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    } else if (sortBy === 'comments') {
+      const { data: commentsData } = await sb.from('comentarios').select('receta_id').in('receta_id', ids);
+      const counts = {};
+      (commentsData || []).forEach(c => counts[c.receta_id] = (counts[c.receta_id] || 0) + 1);
+      return data.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
+    }
+    
+    return data;
+  },
   async byUser(pid) {
     let q = sb.from('recetas').select('*').eq('perfil_id', pid).order('created_at', { ascending: false });
     // If viewing someone else, filter only visible
@@ -375,16 +410,29 @@ document.querySelectorAll('.filter-btn').forEach(b => b.addEventListener('click'
 // SEARCH
 // ═══════════════════════════════════════════════════════════
 let searchTab = 'recipes', searchDebounce;
-document.querySelectorAll('.search-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.search-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); searchTab = t.dataset.target; runSearch(); }));
+document.querySelectorAll('.search-tab').forEach(t => t.addEventListener('click', () => { 
+  document.querySelectorAll('.search-tab').forEach(x => x.classList.remove('active')); 
+  t.classList.add('active'); 
+  searchTab = t.dataset.target; 
+  document.getElementById('advanced-filters').classList.toggle('hidden', searchTab !== 'recipes');
+  runSearch(); 
+}));
 document.getElementById('search-input').addEventListener('input', () => { clearTimeout(searchDebounce); searchDebounce = setTimeout(runSearch, 300); });
+document.querySelectorAll('.search-select').forEach(s => s.addEventListener('change', runSearch));
 
 async function runSearch() {
   const q = document.getElementById('search-input').value.trim();
+  const method = document.getElementById('filter-method').value;
+  const roast = document.getElementById('filter-roast').value;
+  const process = document.getElementById('filter-process').value;
+  const sortBy = document.getElementById('filter-sort').value;
+  
   const results = document.getElementById('search-results'); const empty = document.getElementById('search-empty');
-  if (!q) { results.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  
+  if (!q && !method && !roast && !process) { results.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
   if (searchTab === 'recipes') {
-    const recipes = await RecipeStore.search(q);
+    const recipes = await RecipeStore.search({ q, method, roast, process, sortBy });
     results.innerHTML = recipes.length ? recipes.map(r => `<div class="search-result-card" data-id="${r.id}"><div class="sr-left">${r.foto_url ? `<img src="${r.foto_url}" class="sr-thumb" alt="">` : `<div class="sr-thumb-ph">☕</div>`}</div><div class="sr-body"><div class="sr-title">${esc(r.nombre)}</div><div class="sr-meta">${esc(r.metodo || '')} · ${r.coffee_grams ? r.coffee_grams + 'g' : ''}</div></div><span class="card-method-badge">${esc(r.metodo || '')}</span></div>`).join('') : '<div class="search-no-results">No se encontraron recetas.</div>';
     results.querySelectorAll('.search-result-card').forEach(c => c.addEventListener('click', () => openModal(c.dataset.id)));
   } else {
