@@ -223,22 +223,30 @@ const RecipeStore = {
     if (roast) query = query.eq('tueste', roast);
     if (process) query = query.eq('proceso', process);
     
-    // We fetch more if we need to sort by likes/comments in JS to ensure accuracy
-    query = query.order('created_at', { ascending: false }).limit(sortBy === 'recent' ? 30 : 100);
+    // Apply base ordering / limits depending on sort mode
+    const effectiveSort = sortBy || 'recent';
+    if (effectiveSort === 'recent') {
+      // For recent, let Postgres handle ordering by date
+      query = query.order('created_at', { ascending: false }).limit(30);
+    } else {
+      // For likes/comments, fetch a larger slice without forcing created_at order,
+      // then sort in JS using the aggregated counts.
+      query = query.limit(200);
+    }
     
     const { data } = await query;
     if (!data || data.length === 0) return [];
 
-    if (sortBy === 'recent') return data;
+    if (effectiveSort === 'recent') return data;
 
     // Fetch counts for sorting
     const ids = data.map(r => r.id);
-    if (sortBy === 'likes') {
+    if (effectiveSort === 'likes') {
       const { data: likesData } = await sb.from('recipe_likes').select('receta_id').in('receta_id', ids);
       const counts = {};
       (likesData || []).forEach(l => counts[l.receta_id] = (counts[l.receta_id] || 0) + 1);
       return data.sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0));
-    } else if (sortBy === 'comments') {
+    } else if (effectiveSort === 'comments') {
       const { data: commentsData } = await sb.from('comentarios').select('receta_id').in('receta_id', ids);
       const counts = {};
       (commentsData || []).forEach(c => counts[c.receta_id] = (counts[c.receta_id] || 0) + 1);
