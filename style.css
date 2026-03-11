@@ -704,14 +704,15 @@ textarea {
   }
 }
 
+/* Global hidden helper */
+.hidden {
+  display: none !important;
+}
+
 /* ── Empty state ─────────────────────────────────────────── */
 .empty-state {
   text-align: center;
   padding: 4rem 1.5rem;
-}
-
-.empty-state.hidden {
-  display: none;
 }
 
 .empty-icon {
