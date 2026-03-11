@@ -97,6 +97,27 @@ sb.auth.onAuthStateChange((event, session) => {
   handleAuthChange(event, session);
 });
 
+function openAuthModal() {
+  const m = document.getElementById('auth-modal');
+  if (!m) return;
+  m.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAuthModal() {
+  const m = document.getElementById('auth-modal');
+  if (!m) return;
+  m.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function requireAuth() {
+  if (uid()) return true;
+  showToast('Inicia sesión para continuar', 'error');
+  openAuthModal();
+  return false;
+}
+
 async function handleAuthChange(event, session) {
   try {
     if (session?.user) {
@@ -137,17 +158,23 @@ async function handleAuthChange(event, session) {
 
 function enterApp() {
   hideLoading();
-  document.getElementById('view-auth').classList.remove('active');
+  closeAuthModal();
   document.getElementById('main-navbar').classList.remove('hidden');
   showAppView('feed');
   updateNavAvatar();
+  updateAuthNav();
   renderFeed();
   refreshNotifBadge();
 }
 function exitApp() {
-  document.getElementById('view-auth').classList.add('active');
-  document.getElementById('main-navbar').classList.add('hidden');
+  hideLoading();
+  closeAuthModal();
+  document.getElementById('main-navbar').classList.remove('hidden');
   document.querySelectorAll('main .view').forEach(v => v.classList.remove('active'));
+  showAppView('feed');
+  updateNavAvatar();
+  updateAuthNav();
+  renderFeed();
 }
 
 function updateNavAvatar() {
@@ -155,6 +182,20 @@ function updateNavAvatar() {
   const fb = document.getElementById('nav-avatar-fallback');
   if (currentProfile?.foto_perfil) { img.src = currentProfile.foto_perfil; img.style.display = 'block'; fb.style.display = 'none'; }
   else { img.style.display = 'none'; fb.style.display = 'flex'; fb.textContent = currentProfile ? currentProfile.display_name[0].toUpperCase() : '?'; }
+}
+
+function updateAuthNav() {
+  const hasUser = !!uid();
+  const newBtn = document.getElementById('btn-new-recipe');
+  const emptyBtn = document.getElementById('btn-empty-new');
+  const profileBtn = document.getElementById('btn-profile');
+  const logoutBtn = document.getElementById('btn-logout');
+  const loginBtn = document.getElementById('btn-login-open');
+  if (newBtn) newBtn.style.display = hasUser ? '' : 'none';
+  if (emptyBtn) emptyBtn.style.display = hasUser ? '' : 'none';
+  if (profileBtn) profileBtn.style.display = hasUser ? '' : 'none';
+  if (logoutBtn) logoutBtn.style.display = hasUser ? '' : 'none';
+  if (loginBtn) loginBtn.style.display = hasUser ? 'none' : '';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -413,8 +454,38 @@ function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
 
   card.innerHTML = `${photoHTML}<div class="card-body">${authorHTML}<div class="card-header"><div><div class="card-title">${esc(r.nombre)}</div>${(r.nombre_cafe || r.origen) ? `<div class="card-origin">${esc([r.nombre_cafe, r.origen].filter(Boolean).join(' · '))}</div>` : ''}</div><span class="card-method-badge">${esc(r.metodo || '')}</span></div><div class="card-params"><div class="card-param"><div class="card-param-label">Café</div><div class="card-param-value">${cg ? cg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Agua</div><div class="card-param-value">${wg ? wg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Ratio</div><div class="card-param-value">${ratio}</div></div><div class="card-param"><div class="card-param-label">Temp.</div><div class="card-param-value">${r.temperatura ? r.temperatura + '°C' : '—'}</div></div><div class="card-param"><div class="card-param-label">Tueste</div><div class="card-param-value">${esc(r.tueste || '—')}</div></div><div class="card-param"><div class="card-param-label">Molienda</div><div class="card-param-value">${r.clicks_molienda ? GRIND_LABELS[r.clicks_molienda] || r.clicks_molienda : '—'}</div></div></div><div class="card-footer"><span class="card-date">${timeAgo(r.created_at)}</span><div class="card-footer-right"><button class="card-save-btn${isSaved ? ' saved' : ''}" data-id="${r.id}" title="Guardar"><svg viewBox="0 0 20 20" fill="${isSaved ? 'currentColor' : 'none'}"><path d="M5 2h10a1 1 0 011 1v15l-6-4-6 4V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${saveCount}</span></button><button class="card-like-btn${isLiked ? ' liked' : ''}" data-id="${r.id}"><svg viewBox="0 0 20 20" fill="${isLiked ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${likeCount}</span></button>${r.etapas?.length ? `<span class="card-stages-count">${r.etapas.length} etapa${r.etapas.length > 1 ? 's' : ''}</span>` : ''}</div></div></div>`;
 
-  card.querySelector('.card-save-btn').addEventListener('click', async e => { e.stopPropagation(); const btn = e.currentTarget; try { const res = await SaveStore.toggle(r.id); btn.classList.toggle('saved', res.saved); btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none'); btn.querySelector('span').textContent = res.count; btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success'); } catch { showToast('Error', 'error'); } });
-  card.querySelector('.card-like-btn').addEventListener('click', async e => { e.stopPropagation(); const btn = e.currentTarget; try { const res = await LikeStore.toggle(r.id); btn.querySelector('span').textContent = res.count; btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); } catch { showToast('Error', 'error'); } });
+  card.querySelector('.card-save-btn').addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!requireAuth()) return;
+    const btn = e.currentTarget;
+    try {
+      const res = await SaveStore.toggle(r.id);
+      btn.classList.toggle('saved', res.saved);
+      btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none');
+      btn.querySelector('span').textContent = res.count;
+      btn.classList.add('pulse');
+      setTimeout(() => btn.classList.remove('pulse'), 400);
+      showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success');
+    } catch {
+      showToast('Error', 'error');
+    }
+  });
+
+  card.querySelector('.card-like-btn').addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!requireAuth()) return;
+    const btn = e.currentTarget;
+    try {
+      const res = await LikeStore.toggle(r.id);
+      btn.querySelector('span').textContent = res.count;
+      btn.classList.toggle('liked', res.liked);
+      btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+      btn.classList.add('pulse');
+      setTimeout(() => btn.classList.remove('pulse'), 400);
+    } catch {
+      showToast('Error', 'error');
+    }
+  });
   const authorEl = card.querySelector('.card-author'); if (authorEl) authorEl.addEventListener('click', e => { e.stopPropagation(); openProfileView(authorEl.dataset.uid); });
   card.addEventListener('click', () => openModal(r.id));
   return card;
@@ -507,6 +578,7 @@ async function openProfileView(id) {
     const isF = await FollowStore.isFollowing(id);
     followBtn.textContent = isF ? 'Siguiendo' : 'Seguir'; followBtn.className = `btn-follow${isF ? ' following' : ''}`;
     followBtn.onclick = async () => {
+      if (!requireAuth()) return;
       const cur = followBtn.classList.contains('following');
       if (cur) { await FollowStore.unfollow(id); followBtn.textContent = 'Seguir'; followBtn.classList.remove('following'); document.getElementById('pv-followers').textContent = Math.max(0, parseInt(document.getElementById('pv-followers').textContent) - 1); }
       else { await FollowStore.follow(id); followBtn.textContent = 'Siguiendo'; followBtn.classList.add('following'); document.getElementById('pv-followers').textContent = parseInt(document.getElementById('pv-followers').textContent) + 1; }
@@ -792,6 +864,7 @@ async function loadComments(recetaId) {
   list.querySelectorAll('.comment-like-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
+      if (!requireAuth()) return;
       try {
         const cid = btn.dataset.cid;
         const res = await CommentLikeStore.toggle(cid);
@@ -819,6 +892,7 @@ async function loadComments(recetaId) {
 }
 
 document.getElementById('btn-send-comment').addEventListener('click', async () => {
+  if (!requireAuth()) return;
   const input = document.getElementById('comment-input');
   const t = input.value.trim();
   if (!t) return;
@@ -841,8 +915,38 @@ document.getElementById('btn-send-comment').addEventListener('click', async () =
   } catch (err) { showToast('Error enviando comentario', 'error'); }
 });
 document.getElementById('comment-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-comment').click(); } });
-document.getElementById('btn-modal-like').addEventListener('click', async () => { try { const res = await LikeStore.toggle(modalRecipeId); document.getElementById('modal-like-count').textContent = res.count; const btn = document.getElementById('btn-modal-like'); btn.classList.toggle('liked', res.liked); btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); syncCardLikeState(modalRecipeId, res.liked, res.count); } catch { showToast('Error', 'error'); } });
-document.getElementById('btn-modal-save').addEventListener('click', async () => { try { const res = await SaveStore.toggle(modalRecipeId); const btn = document.getElementById('btn-modal-save'); btn.classList.toggle('saved', res.saved); document.getElementById('modal-save-count').textContent = res.count; btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none'); btn.classList.add('pulse'); setTimeout(() => btn.classList.remove('pulse'), 400); syncCardSaveState(modalRecipeId, res.saved, res.count); showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success'); } catch { showToast('Error', 'error'); } });
+document.getElementById('btn-modal-like').addEventListener('click', async () => {
+  if (!requireAuth()) return;
+  try {
+    const res = await LikeStore.toggle(modalRecipeId);
+    document.getElementById('modal-like-count').textContent = res.count;
+    const btn = document.getElementById('btn-modal-like');
+    btn.classList.toggle('liked', res.liked);
+    btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+    btn.classList.add('pulse');
+    setTimeout(() => btn.classList.remove('pulse'), 400);
+    syncCardLikeState(modalRecipeId, res.liked, res.count);
+  } catch {
+    showToast('Error', 'error');
+  }
+});
+
+document.getElementById('btn-modal-save').addEventListener('click', async () => {
+  if (!requireAuth()) return;
+  try {
+    const res = await SaveStore.toggle(modalRecipeId);
+    const btn = document.getElementById('btn-modal-save');
+    btn.classList.toggle('saved', res.saved);
+    document.getElementById('modal-save-count').textContent = res.count;
+    btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none');
+    btn.classList.add('pulse');
+    setTimeout(() => btn.classList.remove('pulse'), 400);
+    syncCardSaveState(modalRecipeId, res.saved, res.count);
+    showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success');
+  } catch {
+    showToast('Error', 'error');
+  }
+});
 
 // Sync feed card like button after modal toggle
 function syncCardLikeState(recipeId, isLiked, count) {
@@ -947,13 +1051,15 @@ document.getElementById('btn-mark-all-read').addEventListener('click', async () 
 });
 
 // ── Nav ───────────────────────────────────────────────────
-document.getElementById('btn-new-recipe').addEventListener('click', openNewForm);
-document.getElementById('btn-empty-new')?.addEventListener('click', openNewForm);
+document.getElementById('btn-new-recipe').addEventListener('click', () => { if (!requireAuth()) return; openNewForm(); });
+document.getElementById('btn-empty-new')?.addEventListener('click', () => { if (!requireAuth()) return; openNewForm(); });
 document.getElementById('btn-brand').addEventListener('click', () => { closeModal(); closePV(); showAppView('feed'); renderFeed(); });
 document.getElementById('btn-back').addEventListener('click', () => showAppView('feed'));
 document.getElementById('btn-cancel').addEventListener('click', () => showAppView('feed'));
-document.getElementById('btn-profile').addEventListener('click', () => { if (uid()) openProfileView(uid()); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!confirmOverlay.classList.contains('hidden')) { confirmOverlay.classList.add('hidden'); return; } if (!ulModal.classList.contains('hidden')) { closeUserListModal(); return; } if (!modal.classList.contains('hidden')) { closeModal(); return; } if (!pvModal.classList.contains('hidden')) { closePV(); return; } if (!epModal.classList.contains('hidden')) { closeEP(); return; } } });
+document.getElementById('btn-profile').addEventListener('click', () => { if (!requireAuth()) return; if (uid()) openProfileView(uid()); });
+document.getElementById('btn-login-open').addEventListener('click', () => { openAuthModal(); });
+document.getElementById('auth-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAuthModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!confirmOverlay.classList.contains('hidden')) { confirmOverlay.classList.add('hidden'); return; } if (!ulModal.classList.contains('hidden')) { closeUserListModal(); return; } if (!modal.classList.contains('hidden')) { closeModal(); return; } if (!pvModal.classList.contains('hidden')) { closePV(); return; } if (!epModal.classList.contains('hidden')) { closeEP(); return; } const authModal = document.getElementById('auth-modal'); if (authModal && !authModal.classList.contains('hidden')) { closeAuthModal(); return; } } });
 
 // ═══════════════════════════════════════════════════════════
 // INIT

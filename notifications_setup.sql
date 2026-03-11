@@ -72,7 +72,7 @@ CREATE INDEX IF NOT EXISTS idx_recipe_saves_recipe ON recipe_saves(recipe_id);
 
 ALTER TABLE recipe_saves ENABLE ROW LEVEL SECURITY;
 
--- Only the saver can see their own saves
-CREATE POLICY "saves_select" ON recipe_saves FOR SELECT USING (auth.uid() = perfil_id);
+-- Only the saver can see their own saves on the profile, but counts need to be readable by anyone
+CREATE POLICY "saves_select" ON recipe_saves FOR SELECT USING (true);
 CREATE POLICY "saves_insert" ON recipe_saves FOR INSERT WITH CHECK (auth.uid() = perfil_id);
 CREATE POLICY "saves_delete" ON recipe_saves FOR DELETE USING (auth.uid() = perfil_id);

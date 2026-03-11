@@ -14,8 +14,8 @@
 
 <body>
 
-  <!-- ═══ AUTH VIEW ═══ -->
-  <section id="view-auth" class="view active">
+  <!-- ═══ AUTH MODAL (Login / Register) ═══ -->
+  <div id="auth-modal" class="modal-overlay hidden">
     <div class="auth-container">
       <div class="auth-brand">
         <svg class="auth-brand-icon" viewBox="0 0 32 32" fill="none">
@@ -51,7 +51,7 @@
         <p class="auth-switch">¿Ya tienes cuenta? <button type="button" id="show-login">Inicia Sesión</button></p>
       </form>
     </div>
-  </section>
+  </div>
 
   <!-- NAVBAR (hidden until auth) -->
   <header class="navbar hidden" id="main-navbar">
@@ -90,6 +90,7 @@
       </button>
     </nav>
     <div class="nav-right">
+      <button class="btn-secondary" id="btn-login-open">Iniciar Sesión</button>
       <button class="btn-primary" id="btn-new-recipe">
         <svg viewBox="0 0 20 20" fill="none">
           <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
