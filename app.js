@@ -111,6 +111,8 @@ function closeAuthModal() {
   document.body.style.overflow = '';
 }
 
+document.getElementById('btn-auth-close')?.addEventListener('click', closeAuthModal);
+
 function requireAuth() {
   if (uid()) return true;
   showToast('Inicia sesión para continuar', 'error');

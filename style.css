@@ -1859,6 +1859,10 @@ select option {
   display: none;
 }
 
+#auth-modal {
+  z-index: 300;
+}
+
 @keyframes overlayIn {
   from {
     opacity: 0;
