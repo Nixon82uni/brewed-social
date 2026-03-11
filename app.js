@@ -531,8 +531,18 @@ async function runSearch() {
     // so we can show all public recipes sorted by the selected option.
     empty.classList.add('hidden');
     const recipes = await RecipeStore.search({ q, method, roast, process, sortBy });
+    
+    // Fetch counts and timestamps for each recipe in search results
+    const [likeCounts, commentCounts] = await Promise.all([
+      Promise.all(recipes.map(r => LikeStore.count(r.id))),
+      Promise.all(recipes.map(async r => {
+        const { count } = await sb.from('comentarios').select('*', { count: 'exact', head: true }).eq('receta_id', r.id);
+        return count || 0;
+      }))
+    ]);
+
     results.innerHTML = recipes.length
-      ? recipes.map(r => `<div class="search-result-card" data-id="${r.id}"><div class="sr-left">${r.foto_url ? `<img src="${r.foto_url}" class="sr-thumb" alt="">` : `<div class="sr-thumb-ph">☕</div>`}</div><div class="sr-body"><div class="sr-title">${esc(r.nombre)}</div><div class="sr-meta">${esc(r.metodo || '')} · ${r.coffee_grams ? r.coffee_grams + 'g' : ''}</div></div><span class="card-method-badge">${esc(r.metodo || '')}</span></div>`).join('')
+      ? recipes.map((r, i) => `<div class="search-result-card" data-id="${r.id}"><div class="sr-left">${r.foto_url ? `<img src="${r.foto_url}" class="sr-thumb" alt="">` : `<div class="sr-thumb-ph">☕</div>`}</div><div class="sr-body"><div class="sr-title">${esc(r.nombre)}</div><div class="sr-meta">${esc(r.metodo || '')} · ${r.coffee_grams ? r.coffee_grams + 'g' : ''}</div><div class="sr-stats"><span>${likeCounts[i]} likes</span><span>${commentCounts[i]} comentarios</span><span>${timeAgo(r.created_at)}</span></div></div><span class="card-method-badge">${esc(r.metodo || '')}</span></div>`).join('')
       : '<div class="search-no-results">No se encontraron recetas.</div>';
     results.querySelectorAll('.search-result-card').forEach(c => c.addEventListener('click', () => openModal(c.dataset.id)));
   } else {

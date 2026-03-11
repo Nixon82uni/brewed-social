@@ -897,6 +897,16 @@ textarea {
   font-size: 0.85rem;
 }
 
+.sr-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
 .search-result-card,
 .search-result-user {
   display: flex;
