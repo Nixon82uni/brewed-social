@@ -400,7 +400,12 @@ function showAppView(name) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   window.scrollTo(0, 0);
 }
-document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => { showAppView(b.dataset.view); if (b.dataset.view === 'feed') renderFeed(); if (b.dataset.view === 'notifications') renderNotifications(); }));
+document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => { 
+  showAppView(b.dataset.view); 
+  if (b.dataset.view === 'feed') renderFeed(); 
+  if (b.dataset.view === 'notifications') renderNotifications(); 
+  if (b.dataset.view === 'search' && searchTab === 'recipes') runSearch();
+}));
 
 // ═══════════════════════════════════════════════════════════
 // FEED
