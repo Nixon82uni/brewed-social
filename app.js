@@ -445,17 +445,30 @@ async function runSearch() {
   const process = document.getElementById('filter-process').value;
   const sortBy = document.getElementById('filter-sort').value;
   
-  const results = document.getElementById('search-results'); const empty = document.getElementById('search-empty');
-  
-  if (!q && !method && !roast && !process) { results.innerHTML = ''; empty.classList.remove('hidden'); return; }
-  empty.classList.add('hidden');
+  const results = document.getElementById('search-results');
+  const empty = document.getElementById('search-empty');
+
   if (searchTab === 'recipes') {
+    // Always run the search for recipes, even with no text/filters,
+    // so we can show all public recipes sorted by the selected option.
+    empty.classList.add('hidden');
     const recipes = await RecipeStore.search({ q, method, roast, process, sortBy });
-    results.innerHTML = recipes.length ? recipes.map(r => `<div class="search-result-card" data-id="${r.id}"><div class="sr-left">${r.foto_url ? `<img src="${r.foto_url}" class="sr-thumb" alt="">` : `<div class="sr-thumb-ph">☕</div>`}</div><div class="sr-body"><div class="sr-title">${esc(r.nombre)}</div><div class="sr-meta">${esc(r.metodo || '')} · ${r.coffee_grams ? r.coffee_grams + 'g' : ''}</div></div><span class="card-method-badge">${esc(r.metodo || '')}</span></div>`).join('') : '<div class="search-no-results">No se encontraron recetas.</div>';
+    results.innerHTML = recipes.length
+      ? recipes.map(r => `<div class="search-result-card" data-id="${r.id}"><div class="sr-left">${r.foto_url ? `<img src="${r.foto_url}" class="sr-thumb" alt="">` : `<div class="sr-thumb-ph">☕</div>`}</div><div class="sr-body"><div class="sr-title">${esc(r.nombre)}</div><div class="sr-meta">${esc(r.metodo || '')} · ${r.coffee_grams ? r.coffee_grams + 'g' : ''}</div></div><span class="card-method-badge">${esc(r.metodo || '')}</span></div>`).join('')
+      : '<div class="search-no-results">No se encontraron recetas.</div>';
     results.querySelectorAll('.search-result-card').forEach(c => c.addEventListener('click', () => openModal(c.dataset.id)));
   } else {
+    // For user search, preserve the "type something to search" empty state behavior
+    if (!q) {
+      results.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
     const users = await UserStore.search(q);
-    results.innerHTML = users.length ? users.map(u => `<div class="search-result-user" data-uid="${u.id}"><div class="sr-avatar">${u.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${u.display_name[0].toUpperCase()}</span>`}</div><div class="sr-body"><div class="sr-title">${esc(u.display_name)}</div><div class="sr-meta">@${esc(u.username)}</div></div></div>`).join('') : '<div class="search-no-results">No se encontraron usuarios.</div>';
+    results.innerHTML = users.length
+      ? users.map(u => `<div class="search-result-user" data-uid="${u.id}"><div class="sr-avatar">${u.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${u.display_name[0].toUpperCase()}</span>`}</div><div class="sr-body"><div class="sr-title">${esc(u.display_name)}</div><div class="sr-meta">@${esc(u.username)}</div></div></div>`).join('')
+      : '<div class="search-no-results">No se encontraron usuarios.</div>';
     results.querySelectorAll('.search-result-user').forEach(c => c.addEventListener('click', () => openProfileView(c.dataset.uid)));
   }
 }
