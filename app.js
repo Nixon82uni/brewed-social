@@ -74,14 +74,44 @@ document.getElementById('register-form').addEventListener('submit', async e => {
   } catch (err) { showToast('Algo salió mal, intenta de nuevo', 'error'); }
 });
 
-// Toggle Login / Register
+// Toggle Login / Register / Forgot
+const loginFormEl = document.getElementById('login-form');
+const registerFormEl = document.getElementById('register-form');
+const forgotFormEl = document.getElementById('forgot-form');
+
 document.getElementById('show-register').addEventListener('click', () => {
-  document.getElementById('login-form').classList.add('hidden');
-  document.getElementById('register-form').classList.remove('hidden');
+  loginFormEl.classList.add('hidden');
+  forgotFormEl.classList.add('hidden');
+  registerFormEl.classList.remove('hidden');
 });
 document.getElementById('show-login').addEventListener('click', () => {
-  document.getElementById('register-form').classList.add('hidden');
-  document.getElementById('login-form').classList.remove('hidden');
+  registerFormEl.classList.add('hidden');
+  forgotFormEl.classList.add('hidden');
+  loginFormEl.classList.remove('hidden');
+});
+document.getElementById('show-forgot').addEventListener('click', () => {
+  loginFormEl.classList.add('hidden');
+  registerFormEl.classList.add('hidden');
+  forgotFormEl.classList.remove('hidden');
+});
+document.getElementById('show-login-from-forgot').addEventListener('click', () => {
+  forgotFormEl.classList.add('hidden');
+  registerFormEl.classList.add('hidden');
+  loginFormEl.classList.remove('hidden');
+});
+
+document.getElementById('forgot-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) { showToast('Falta el ingrediente principal', 'error'); return; }
+  try {
+    await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://brewed.me'
+    });
+    showToast('Revisa tu correo para restablecer tu contraseña ☕', 'success');
+  } catch (err) {
+    showToast('Algo salió mal, intenta de nuevo', 'error');
+  }
 });
 
 // Logout
