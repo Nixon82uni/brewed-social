@@ -14,17 +14,17 @@
 
   --bg: var(--color-espresso);
   --bg-2: var(--color-roast);
-  --bg-3: #1E1712;
-  --bg-card: #1A1410;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-h: rgba(255, 255, 255, 0.13);
+  --bg-3: var(--color-roast);
+  --bg-card: var(--color-roast);
+  --border: rgba(245, 236, 215, 0.08);
+  --border-h: rgba(245, 236, 215, 0.18);
   --accent: var(--color-caramel);
   --accent-2: var(--color-honey);
-  --amber: #F0A855;
-  --amber-light: #F5C97C;
+  --amber: var(--color-honey);
+  --amber-light: var(--color-cream);
   --text-1: var(--color-milk);
-  --text-2: #A89A8E;
-  --text-3: #6B5C52;
+  --text-2: var(--color-cream);
+  --text-3: #9A7A55;
   --danger: #C0454F;
   --danger-h: #E0525E;
   --success: #5BAD7A;
@@ -32,7 +32,7 @@
   --radius-lg: 20px;
   --radius-xl: 28px;
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 0 40px rgba(201, 120, 62, 0.12);
+  --shadow-glow: 0 0 40px rgba(196, 134, 43, 0.12);
   --font: 'Outfit', system-ui, sans-serif;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -86,7 +86,7 @@ textarea {
   gap: 1rem;
   padding: 0 1.5rem;
   height: 56px;
-  background: rgba(13, 10, 11, 0.88);
+  background: rgba(28, 10, 0, 0.88);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
@@ -107,13 +107,13 @@ textarea {
 .brand-icon {
   width: 24px;
   height: 24px;
-  color: var(--accent);
+  color: var(--color-caramel);
 }
 
 .brand-name {
   font-size: 1.15rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--amber-light), var(--accent));
+  background: linear-gradient(135deg, var(--color-cream), var(--color-caramel));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -175,7 +175,7 @@ textarea {
 }
 
 .avatar-btn:hover {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 .nav-avatar {
@@ -203,13 +203,13 @@ textarea {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1.1rem;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
   border-radius: 999px;
   transition: transform 0.15s var(--ease), box-shadow 0.15s;
-  box-shadow: 0 2px 12px rgba(201, 120, 62, 0.3);
+  box-shadow: 0 2px 12px rgba(196, 134, 43, 0.3);
 }
 
 .btn-primary svg {
@@ -219,7 +219,7 @@ textarea {
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(201, 120, 62, 0.45);
+  box-shadow: 0 4px 20px rgba(196, 134, 43, 0.45);
 }
 
 .btn-primary:active {
@@ -317,16 +317,16 @@ textarea {
 }
 
 .btn-icon.btn-edit:hover {
-  background: rgba(201, 120, 62, 0.15);
-  color: var(--accent-2);
-  border-color: rgba(201, 120, 62, 0.3);
+  background: rgba(196, 134, 43, 0.15);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.3);
 }
 
 .btn-icon.btn-like:hover,
 .btn-icon.btn-like.liked {
-  background: rgba(224, 90, 106, 0.15);
-  color: #e05a6a;
-  border-color: rgba(224, 90, 106, 0.3);
+  background: rgba(196, 134, 43, 0.15);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.3);
 }
 
 .btn-icon.pulse {
@@ -336,7 +336,7 @@ textarea {
 /* ── Follow Button ───────────────────────────────────────── */
 .btn-follow {
   padding: 0.45rem 1.5rem;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
@@ -347,7 +347,7 @@ textarea {
 }
 
 .btn-follow:hover {
-  box-shadow: 0 3px 16px rgba(201, 120, 62, 0.4);
+  box-shadow: 0 3px 16px rgba(196, 134, 43, 0.4);
   transform: translateY(-1px);
 }
 
@@ -398,7 +398,7 @@ textarea {
 
 .feed-hero {
   padding: 3rem 1.5rem 1.5rem;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 120, 62, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(196, 134, 43, 0.08) 0%, transparent 70%);
   text-align: center;
 }
 
@@ -411,7 +411,7 @@ textarea {
 }
 
 .accent {
-  color: var(--accent-2);
+  color: var(--color-honey);
 }
 
 .hero-sub {
@@ -445,10 +445,10 @@ textarea {
 }
 
 .feed-tab.active {
-  background: var(--accent);
+  background: var(--color-caramel);
   color: #fff;
-  border-color: var(--accent);
-  box-shadow: 0 2px 10px rgba(201, 120, 62, 0.3);
+  border-color: var(--color-caramel);
+  box-shadow: 0 2px 10px rgba(196, 134, 43, 0.3);
 }
 
 /* Filter bar */
@@ -482,9 +482,9 @@ textarea {
 }
 
 .filter-btn.active {
-  background: var(--accent);
+  background: var(--color-caramel);
   color: #fff;
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 /* Recipe Grid */
@@ -541,7 +541,7 @@ textarea {
 }
 
 .card-author:hover .card-author-name {
-  color: var(--accent-2);
+  color: var(--color-honey);
 }
 
 .card-author-avatar {
@@ -590,9 +590,9 @@ textarea {
   text-transform: uppercase;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  background: rgba(201, 120, 62, 0.12);
-  color: var(--accent-2);
-  border: 1px solid rgba(201, 120, 62, 0.2);
+  background: rgba(196, 134, 43, 0.12);
+  color: var(--color-honey);
+  border: 1px solid rgba(196, 134, 43, 0.2);
   flex-shrink: 0;
 }
 
@@ -683,7 +683,7 @@ textarea {
 
 .card-like-btn:hover,
 .card-like-btn.liked {
-  color: #e05a6a;
+  color: var(--color-honey);
 }
 
 .card-like-btn.pulse {
@@ -832,8 +832,8 @@ textarea {
 }
 
 .search-bar:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(201, 120, 62, 0.12);
+  border-color: var(--color-caramel);
+  box-shadow: 0 0 0 3px rgba(196, 134, 43, 0.12);
 }
 
 .search-bar svg {
@@ -875,9 +875,9 @@ textarea {
 }
 
 .search-tab.active {
-  background: var(--accent);
+  background: var(--color-caramel);
   color: #fff;
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 .search-results {
@@ -1037,11 +1037,11 @@ textarea {
 }
 
 .avatar-upload:hover {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 .avatar-upload.drag-over {
-  border-color: var(--accent-2);
+  border-color: var(--color-honey);
 }
 
 .avatar-prompt {
@@ -1192,11 +1192,11 @@ textarea {
 }
 
 .pv-stat-clickable:hover .pv-stat-label {
-  color: var(--accent-2);
+  color: var(--color-honey);
 }
 
 .pv-stat-likes {
-  color: #e05a6a;
+  color: var(--color-honey);
 }
 
 /* ═══ USER LIST MODAL ═══ */
@@ -1235,8 +1235,8 @@ textarea {
 }
 
 .ul-item:hover {
-  border-color: var(--accent);
-  background: rgba(201, 120, 62, 0.06);
+  border-color: var(--color-caramel);
+  background: rgba(196, 134, 43, 0.06);
 }
 
 .ul-avatar {
@@ -1428,8 +1428,8 @@ textarea {
 
 input:focus,
 textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(201, 120, 62, 0.12);
+  border-color: var(--color-caramel);
+  box-shadow: 0 0 0 3px rgba(196, 134, 43, 0.12);
 }
 
 input::placeholder,
@@ -1474,7 +1474,7 @@ select {
 }
 
 select:focus {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 select option {
@@ -1508,33 +1508,33 @@ select option {
 }
 
 .roast-badge.light {
-  background: rgba(245, 201, 124, 0.1);
-  color: #F5C97C;
-  border-color: rgba(245, 201, 124, 0.2);
+  background: rgba(232, 192, 125, 0.1);
+  color: var(--color-cream);
+  border-color: rgba(232, 192, 125, 0.2);
 }
 
 .roast-badge.medium-light {
-  background: rgba(230, 170, 80, 0.1);
-  color: #E6AA50;
-  border-color: rgba(230, 170, 80, 0.2);
+  background: rgba(196, 134, 43, 0.1);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.2);
 }
 
 .roast-badge.medium {
-  background: rgba(201, 120, 62, 0.12);
-  color: var(--accent-2);
-  border-color: rgba(201, 120, 62, 0.25);
+  background: rgba(196, 134, 43, 0.12);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.25);
 }
 
 .roast-badge.medium-dark {
-  background: rgba(160, 80, 30, 0.12);
-  color: #C97040;
-  border-color: rgba(160, 80, 30, 0.3);
+  background: rgba(111, 58, 31, 0.12);
+  color: var(--color-caramel);
+  border-color: rgba(111, 58, 31, 0.3);
 }
 
 .roast-badge.dark {
-  background: rgba(80, 40, 15, 0.2);
-  color: #A0602A;
-  border-color: rgba(80, 40, 15, 0.4);
+  background: rgba(61, 26, 0, 0.2);
+  color: var(--color-roast);
+  border-color: rgba(61, 26, 0, 0.4);
 }
 
 .roast-option input:checked+.roast-badge {
@@ -1556,12 +1556,12 @@ select option {
 }
 
 .photo-upload:hover {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 .photo-upload.drag-over {
-  border-color: var(--accent-2);
-  background: rgba(201, 120, 62, 0.04);
+  border-color: var(--color-honey);
+  background: rgba(196, 134, 43, 0.04);
 }
 
 .photo-prompt {
@@ -1621,9 +1621,9 @@ select option {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--amber-light);
+  background: var(--color-cream);
   border: 3px solid var(--bg);
-  box-shadow: 0 0 6px rgba(201, 120, 62, 0.5);
+  box-shadow: 0 0 6px rgba(196, 134, 43, 0.5);
   cursor: grab;
 }
 
@@ -1640,7 +1640,7 @@ select option {
 
 .grind-value-display span:first-child {
   font-weight: 600;
-  color: var(--amber);
+  color: var(--color-honey);
 }
 
 .grind-number {
@@ -1674,7 +1674,7 @@ select option {
 }
 
 .temp-btn.active {
-  background: var(--accent);
+  background: var(--color-caramel);
   color: #fff;
 }
 
@@ -1711,7 +1711,7 @@ select option {
 .ratio-value {
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--amber);
+  color: var(--color-honey);
 }
 
 .ratio-unit {
@@ -1725,9 +1725,9 @@ select option {
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.6rem;
-  background: rgba(201, 120, 62, 0.1);
-  border: 1px solid rgba(201, 120, 62, 0.2);
-  color: var(--accent-2);
+  background: rgba(196, 134, 43, 0.1);
+  border: 1px solid rgba(196, 134, 43, 0.2);
+  color: var(--color-honey);
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 600;
@@ -1742,7 +1742,7 @@ select option {
 }
 
 .btn-add-stage:hover {
-  background: rgba(201, 120, 62, 0.18);
+  background: rgba(196, 134, 43, 0.18);
 }
 
 .stages-container {
@@ -1793,7 +1793,7 @@ select option {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -1992,7 +1992,7 @@ select option {
 }
 
 .modal-author-inner:hover {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 .modal-author-av {
@@ -2032,9 +2032,9 @@ select option {
   text-transform: uppercase;
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
-  background: rgba(201, 120, 62, 0.12);
-  color: var(--accent-2);
-  border: 1px solid rgba(201, 120, 62, 0.2);
+  background: rgba(196, 134, 43, 0.12);
+  color: var(--color-honey);
+  border: 1px solid rgba(196, 134, 43, 0.2);
   margin-bottom: 0.4rem;
 }
 
@@ -2093,7 +2093,7 @@ select option {
 }
 
 .param-chip-value.highlight {
-  color: var(--amber);
+  color: var(--color-honey);
 }
 
 .modal-stages-wrap.hidden,
@@ -2137,7 +2137,7 @@ select option {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -2177,7 +2177,7 @@ select option {
 .timeline-time {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--amber);
+  color: var(--color-honey);
   white-space: nowrap;
   padding-top: 0.2rem;
 }
@@ -2299,7 +2299,7 @@ select option {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
   color: #fff;
   display: flex;
   align-items: center;
@@ -2315,7 +2315,7 @@ select option {
 
 .btn-send-comment:hover {
   transform: scale(1.08);
-  box-shadow: 0 2px 10px rgba(201, 120, 62, 0.4);
+  box-shadow: 0 2px 10px rgba(196, 134, 43, 0.4);
 }
 
 /* ═══ CONFIRM ═══ */
@@ -2392,7 +2392,7 @@ select option {
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(13, 10, 11, 0.92);
+  background: rgba(28, 10, 0, 0.92);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2417,7 +2417,7 @@ select option {
   width: 36px;
   height: 36px;
   border: 3px solid var(--border);
-  border-top-color: var(--accent);
+  border-top-color: var(--color-caramel);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -2445,7 +2445,7 @@ select option {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(201, 120, 62, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse 60% 50% at 50% 30%, rgba(196, 134, 43, 0.08) 0%, transparent 70%);
 }
 
 .auth-brand {
@@ -2456,14 +2456,14 @@ select option {
 .auth-brand-icon {
   width: 48px;
   height: 48px;
-  color: var(--accent);
+  color: var(--color-caramel);
   margin: 0 auto 0.5rem;
 }
 
 .auth-brand-name {
   font-size: 2.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--amber-light), var(--accent));
+  background: linear-gradient(135deg, var(--color-cream), var(--color-caramel));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2512,7 +2512,7 @@ select option {
 
 .auth-switch button {
   background: none;
-  color: var(--accent-2);
+  color: var(--color-honey);
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
@@ -2591,15 +2591,15 @@ select option {
 }
 
 .vis-badge.vis-followers {
-  background: rgba(100, 150, 255, 0.08);
-  color: #7EB5FF;
-  border-color: rgba(100, 150, 255, 0.2);
+  background: rgba(196, 134, 43, 0.08);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.2);
 }
 
 .vis-badge.vis-private {
-  background: rgba(255, 200, 100, 0.08);
-  color: var(--amber);
-  border-color: rgba(255, 200, 100, 0.2);
+  background: rgba(196, 134, 43, 0.08);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.2);
 }
 
 .vis-option input:checked+.vis-badge {
@@ -2630,13 +2630,13 @@ select option {
 }
 
 .modal-vis-badge.vis-seguidores {
-  background: rgba(100, 150, 255, 0.12);
-  color: #7EB5FF;
+  background: rgba(196, 134, 43, 0.12);
+  color: var(--color-honey);
 }
 
 .modal-vis-badge.vis-privada {
-  background: rgba(255, 200, 100, 0.12);
-  color: var(--amber);
+  background: rgba(196, 134, 43, 0.12);
+  color: var(--color-honey);
 }
 
 /* ── Edit Profile Button ─────────────────────────────────── */
@@ -2659,8 +2659,8 @@ select option {
 }
 
 .btn-edit-profile:hover {
-  border-color: var(--accent);
-  color: var(--accent-2);
+  border-color: var(--color-caramel);
+  color: var(--color-honey);
 }
 
 .btn-edit-profile.hidden {
@@ -2737,8 +2737,8 @@ select option {
 }
 
 .btn-mark-all-read:hover {
-  border-color: var(--accent);
-  color: var(--accent-2);
+  border-color: var(--color-caramel);
+  color: var(--color-honey);
 }
 
 .notif-list {
@@ -2766,8 +2766,8 @@ select option {
 }
 
 .notif-item.unread {
-  border-left: 3px solid var(--accent);
-  background: rgba(201, 120, 62, 0.04);
+  border-left: 3px solid var(--color-caramel);
+  background: rgba(196, 134, 43, 0.04);
 }
 
 .notif-item.unread::after {
@@ -2778,7 +2778,7 @@ select option {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--color-caramel);
 }
 
 .notif-avatar {
@@ -2820,11 +2820,11 @@ select option {
   box-shadow: 0 0 0 2px var(--bg-card);
 }
 
-.notif-type-icon.type-follow { background: #3b82f6; }
-.notif-type-icon.type-like { background: #e05a6a; }
+.notif-type-icon.type-follow { background: var(--color-honey); }
+.notif-type-icon.type-like { background: var(--color-honey); }
 .notif-type-icon.type-comment { background: var(--success); }
-.notif-type-icon.type-reply { background: var(--amber); }
-.notif-type-icon.type-comment_like { background: #c084fc; }
+.notif-type-icon.type-reply { background: var(--color-honey); }
+.notif-type-icon.type-comment_like { background: var(--color-cream); }
 
 .notif-body {
   flex: 1;
@@ -2895,7 +2895,7 @@ select option {
 }
 
 .comment-action-btn.liked {
-  color: #e05a6a;
+  color: var(--color-honey);
 }
 
 .comment-action-btn svg {
@@ -2934,11 +2934,11 @@ select option {
   align-items: center;
   gap: 0.5rem;
   padding: 0.3rem 0.7rem;
-  background: rgba(201, 120, 62, 0.08);
-  border: 1px solid rgba(201, 120, 62, 0.15);
+  background: rgba(196, 134, 43, 0.08);
+  border: 1px solid rgba(196, 134, 43, 0.15);
   border-radius: var(--radius) var(--radius) 0 0;
   font-size: 0.7rem;
-  color: var(--accent-2);
+  color: var(--color-honey);
   font-weight: 600;
 }
 
@@ -2988,7 +2988,7 @@ select option {
 }
 
 .comment-input-row input:focus {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
 }
 
 .comment-input-row input::placeholder {
@@ -3017,7 +3017,7 @@ select option {
 
 .card-save-btn:hover,
 .card-save-btn.saved {
-  color: var(--amber);
+  color: var(--color-honey);
 }
 
 .card-save-btn.saved svg path {
@@ -3030,9 +3030,9 @@ select option {
 
 .btn-icon.btn-save-recipe:hover,
 .btn-icon.btn-save-recipe.saved {
-  background: rgba(240, 168, 85, 0.15);
-  color: var(--amber);
-  border-color: rgba(240, 168, 85, 0.3);
+  background: rgba(196, 134, 43, 0.15);
+  color: var(--color-honey);
+  border-color: rgba(196, 134, 43, 0.3);
 }
 
 .btn-icon.btn-save-recipe.saved svg path {
@@ -3065,8 +3065,8 @@ select option {
 }
 
 .pv-tab.active {
-  color: var(--accent-2);
-  border-bottom-color: var(--accent-2);
+  color: var(--color-honey);
+  border-bottom-color: var(--color-honey);
 }
 
 .pv-saved-empty {
@@ -3116,7 +3116,7 @@ select option {
 }
 
 .search-select:focus {
-  border-color: var(--accent);
+  border-color: var(--color-caramel);
   color: var(--text-1);
 }
 
