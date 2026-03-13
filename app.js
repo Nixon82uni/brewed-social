@@ -336,7 +336,27 @@ const LikeStore = {
 
 const CommentStore = {
   async list(recetaId) { const { data } = await sb.from('comentarios').select('*, perfiles(id,username,display_name,foto_perfil)').eq('receta_id', recetaId).order('created_at', { ascending: true }); return data || []; },
-  async add(recetaId, contenido, parentId = null) { const row = { receta_id: recetaId, perfil_id: uid(), contenido }; if (parentId) row.parent_id = parentId; const { data, error } = await sb.from('comentarios').insert([row]).select('*, perfiles(id,username,display_name,foto_perfil)'); if (error) throw error; return data?.[0]; },
+  async add(recetaId, contenido, parentId = null) {
+    const row = { receta_id: recetaId, perfil_id: uid(), contenido };
+    if (parentId) row.parent_id = parentId;
+    const { data, error } = await sb.from('comentarios').insert([row]).select('*, perfiles(id,username,display_name,foto_perfil)');
+    if (error) throw error;
+    const comment = data?.[0];
+
+    // Notify recipe owner on new top-level comment (not replies)
+    if (!parentId && recetaId && uid()) {
+      try {
+        const recipe = await RecipeStore.get(recetaId);
+        if (recipe?.perfil_id && recipe.perfil_id !== uid()) {
+          NotificationStore.create(recipe.perfil_id, 'comment', recetaId, comment?.id);
+        }
+      } catch (e) {
+        console.error('Comment notification error:', e);
+      }
+    }
+
+    return comment;
+  },
 };
 
 const CommentLikeStore = {
@@ -915,16 +935,11 @@ document.getElementById('btn-send-comment').addEventListener('click', async () =
   if (!t) return;
   try {
     const newComment = await CommentStore.add(modalRecipeId, t, replyToCommentId);
-    // Notify recipe owner (comment) or parent comment author (reply)
+    // Notify parent comment author on replies
     if (replyToCommentId) {
-      // Find the parent comment to get its author
       const allComments = await CommentStore.list(modalRecipeId);
       const parent = allComments.find(c => c.id === replyToCommentId);
       if (parent?.perfil_id) NotificationStore.create(parent.perfil_id, 'reply', modalRecipeId, newComment?.id);
-    } else {
-      // Notify recipe owner
-      const recipe = await RecipeStore.get(modalRecipeId);
-      if (recipe?.perfil_id) NotificationStore.create(recipe.perfil_id, 'comment', modalRecipeId, newComment?.id);
     }
     input.value = '';
     clearReplyTo();
