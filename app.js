@@ -819,25 +819,57 @@ function previewRecipePhoto(file) { recipePhotoFile = file; const reader = new F
 function isEspressoMethod() {
   return document.getElementById('field-method').value === 'Espresso';
 }
+function isFrenchPressMethod() {
+  return document.getElementById('field-method').value === 'French Press';
+}
+
+function updateBloomFields() {
+  const bloomSelect = document.getElementById('field-bloom');
+  const yes = bloomSelect && bloomSelect.value === 'yes';
+  document.querySelectorAll('.fp-bloom-extra').forEach(el => el.classList.toggle('hidden', !yes));
+}
+
+function updateCrustFields() {
+  const crustSelect = document.getElementById('field-break-crust');
+  const yes = crustSelect && crustSelect.value === 'yes';
+  document.querySelectorAll('.fp-crust-extra').forEach(el => el.classList.toggle('hidden', !yes));
+}
 
 function updateMethodFields() {
   const espresso = isEspressoMethod();
+  const french = isFrenchPressMethod();
+
   const waterGroup = document.getElementById('group-water-grams');
   const waterQualityGroup = document.getElementById('group-water-quality');
   const totalTimeGroup = document.getElementById('group-total-time');
   const espressoSection = document.getElementById('espresso-section');
   const yieldInput = document.getElementById('field-yield-grams');
   const waterInput = document.getElementById('field-water-grams');
+  const yieldGroup = document.getElementById('field-yield-grams')?.closest('.field-group');
 
+  // Espresso-specific visibility
   if (espressoSection) espressoSection.classList.toggle('hidden', !espresso);
   document.querySelectorAll('.espresso-only').forEach(el => el.classList.toggle('hidden', !espresso));
 
-  if (waterGroup) waterGroup.classList.toggle('hidden', espresso);
-  if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', espresso);
-  if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', espresso);
+  // French Press–specific visibility
+  document.querySelectorAll('.fp-only').forEach(el => el.classList.toggle('hidden', !french));
+  updateBloomFields();
+  updateCrustFields();
 
-  if (yieldInput) yieldInput.required = espresso;
-  if (waterInput) waterInput.required = !espresso;
+  // Water grams: hidden only for espresso
+  if (waterGroup) waterGroup.classList.toggle('hidden', espresso);
+
+  // Water quality + total time: hidden for espresso and French Press
+  const hideWaterMeta = espresso || french;
+  if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', hideWaterMeta);
+  if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', hideWaterMeta);
+
+  // Yield group: hidden only for French Press
+  if (yieldGroup) yieldGroup.classList.toggle('hidden', french);
+
+  // Required flags
+  if (yieldInput) yieldInput.required = espresso;     // required only for espresso
+  if (waterInput) waterInput.required = !espresso;    // required for non-espresso
 
   updateRatio();
 }
@@ -856,6 +888,10 @@ function updateRatio() {
 document.getElementById('field-coffee-grams').addEventListener('input', updateRatio);
 document.getElementById('field-water-grams').addEventListener('input', updateRatio);
 document.getElementById('field-yield-grams').addEventListener('input', updateRatio);
+
+// French Press bloom/crust toggles
+document.getElementById('field-bloom')?.addEventListener('change', updateBloomFields);
+document.getElementById('field-break-crust')?.addEventListener('change', updateCrustFields);
 
 // Grind
 const grindSlider = document.getElementById('field-grind-level');

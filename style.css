@@ -1420,6 +1420,12 @@ textarea {
   display: none;
 }
 
+.fp-only.hidden,
+.fp-bloom-extra.hidden,
+.fp-crust-extra.hidden {
+  display: none;
+}
+
 .field-row:last-child {
   margin-bottom: 0;
 }

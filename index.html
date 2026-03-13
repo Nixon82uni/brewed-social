@@ -461,6 +461,49 @@
               <div class="field-group"><label for="field-preinfusion">Pre-infusión (seg)</label><input type="number" id="field-preinfusion" min="0" step="1" placeholder="6" /></div>
               <div class="field-group"><label for="field-extraction-time">Tiempo de extracción</label><input type="text" id="field-extraction-time" placeholder="27s" /></div>
             </div>
+            <!-- French Press specific fields -->
+            <div class="field-row fp-only hidden">
+              <div class="field-group">
+                <label for="field-bloom">¿Hiciste bloom?</label>
+                <div class="custom-select">
+                  <select id="field-bloom">
+                    <option value="">Seleccionar…</option>
+                    <option value="no">No</option>
+                    <option value="yes">Sí</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group fp-bloom-extra hidden">
+                <label for="field-bloom-time">Tiempo de bloom (seg)</label>
+                <input type="number" id="field-bloom-time" min="0" step="1" />
+              </div>
+            </div>
+            <div class="field-row fp-only hidden">
+              <div class="field-group fp-bloom-extra hidden">
+                <label for="field-bloom-water">Agua de bloom (g)</label>
+                <input type="number" id="field-bloom-water" min="0" step="1" />
+              </div>
+              <div class="field-group">
+                <label for="field-steeping-time">Tiempo de infusión (min)</label>
+                <input type="number" id="field-steeping-time" min="0" step="0.1" />
+              </div>
+            </div>
+            <div class="field-row fp-only hidden">
+              <div class="field-group">
+                <label for="field-break-crust">¿Rompiste la costra?</label>
+                <div class="custom-select">
+                  <select id="field-break-crust">
+                    <option value="">Seleccionar…</option>
+                    <option value="no">No</option>
+                    <option value="yes">Sí</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group fp-crust-extra hidden">
+                <label for="field-crust-extra-time">Tiempo extra post-costra (seg)</label>
+                <input type="number" id="field-crust-extra-time" min="0" step="1" />
+              </div>
+            </div>
           </div>
           <div class="form-section">
             <h3 class="section-label"><span class="section-icon">📍</span> Etapas <button type="button"
