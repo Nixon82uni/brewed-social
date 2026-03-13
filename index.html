@@ -424,7 +424,7 @@
                       data-unit="C">°C</button><button type="button" class="temp-btn" data-unit="F">°F</button></div>
                 </div>
               </div>
-              <div class="field-group"><label for="field-water-quality">Calidad</label>
+              <div class="field-group espresso-toggle" id="group-water-quality"><label for="field-water-quality">Calidad</label>
                 <div class="custom-select"><select id="field-water-quality">
                     <option value="">Seleccionar…</option>
                     <option>Filtrada</option>
@@ -444,14 +444,22 @@
                 <div class="ratio-display"><span class="ratio-label">Ratio</span><span class="ratio-value"
                     id="ratio-value">—</span><span class="ratio-unit">1 : X</span></div>
               </div>
-              <div class="field-group"><label for="field-water-grams">Agua (g) *</label><input type="number"
+              <div class="field-group espresso-toggle" id="group-water-grams"><label for="field-water-grams">Agua (g) *</label><input type="number"
                   id="field-water-grams" min="0" step="1" placeholder="300" required /></div>
             </div>
             <div class="field-row">
               <div class="field-group"><label for="field-yield-grams">Rendimiento (g)</label><input type="number"
                   id="field-yield-grams" min="0" step="1" placeholder="250" /></div>
-              <div class="field-group"><label for="field-total-time">Tiempo total</label><input type="text"
+              <div class="field-group espresso-toggle" id="group-total-time"><label for="field-total-time">Tiempo total</label><input type="text"
                   id="field-total-time" placeholder="3:30 min" /></div>
+            </div>
+            <div class="field-row espresso-only hidden" id="espresso-section">
+              <div class="field-group"><label for="field-machine">Máquina</label><input type="text" id="field-machine" placeholder="Ej. Linea Mini" /></div>
+              <div class="field-group"><label for="field-pressure">Presión (bars)</label><input type="number" id="field-pressure" min="0" step="0.1" placeholder="9" /></div>
+            </div>
+            <div class="field-row espresso-only hidden">
+              <div class="field-group"><label for="field-preinfusion">Pre-infusión (seg)</label><input type="number" id="field-preinfusion" min="0" step="1" placeholder="6" /></div>
+              <div class="field-group"><label for="field-extraction-time">Tiempo de extracción</label><input type="text" id="field-extraction-time" placeholder="27s" /></div>
             </div>
           </div>
           <div class="form-section">

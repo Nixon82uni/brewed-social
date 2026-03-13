@@ -771,7 +771,28 @@ document.getElementById('edit-profile-form').addEventListener('submit', async e 
 const form = document.getElementById('recipe-form'), formTitle = document.getElementById('form-title');
 let recipePhotoFile = null, editingId = null;
 
-function resetForm() { form.reset(); document.getElementById('field-id').value = ''; document.getElementById('ratio-value').textContent = '—'; document.getElementById('grind-label-text').textContent = 'Medio'; document.getElementById('grind-number').textContent = '5/10'; document.getElementById('field-grind-level').value = 5; updateGrindSliderTrack(5); recipePhotoFile = null; editingId = null; document.getElementById('photo-preview').classList.add('hidden'); document.getElementById('photo-prompt').style.display = ''; document.getElementById('stages-container').innerHTML = ''; document.getElementById('stages-hint').classList.remove('hidden'); stageCount = 0; tempUnit = 'C'; document.querySelectorAll('.temp-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === 'C')); document.getElementById('field-date').value = new Date().toISOString().split('T')[0]; form.querySelector('input[name="visibility"][value="publica"]').checked = true; }
+function resetForm() {
+  form.reset();
+  document.getElementById('field-id').value = '';
+  document.getElementById('ratio-value').textContent = '—';
+  document.getElementById('grind-label-text').textContent = 'Medio';
+  document.getElementById('grind-number').textContent = '5/10';
+  document.getElementById('field-grind-level').value = 5;
+  updateGrindSliderTrack(5);
+  recipePhotoFile = null;
+  editingId = null;
+  document.getElementById('photo-preview').classList.add('hidden');
+  document.getElementById('photo-prompt').style.display = '';
+  document.getElementById('stages-container').innerHTML = '';
+  document.getElementById('stages-hint').classList.remove('hidden');
+  stageCount = 0;
+  tempUnit = 'C';
+  document.querySelectorAll('.temp-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === 'C'));
+  document.getElementById('field-date').value = new Date().toISOString().split('T')[0];
+  form.querySelector('input[name="visibility"][value="publica"]').checked = true;
+  // Ensure method-specific fields are reset
+  updateMethodFields();
+}
 function openNewForm() { resetForm(); editingId = null; formTitle.textContent = 'Nueva Receta'; showAppView('form'); }
 
 async function openEditForm(id) {
@@ -794,10 +815,47 @@ photoDrop.addEventListener('drop', e => { e.preventDefault(); photoDrop.classLis
 photoInput.addEventListener('change', () => { if (photoInput.files[0]) previewRecipePhoto(photoInput.files[0]); });
 function previewRecipePhoto(file) { recipePhotoFile = file; const reader = new FileReader(); reader.onload = e => { document.getElementById('photo-preview').src = e.target.result; document.getElementById('photo-preview').classList.remove('hidden'); document.getElementById('photo-prompt').style.display = 'none'; }; reader.readAsDataURL(file); }
 
-// Ratio
-function updateRatio() { const c = parseFloat(document.getElementById('field-coffee-grams').value), w = parseFloat(document.getElementById('field-water-grams').value); document.getElementById('ratio-value').textContent = (c > 0 && w > 0) ? (w / c).toFixed(1) : '—'; }
+// Ratio & method-specific fields
+function isEspressoMethod() {
+  return document.getElementById('field-method').value === 'Espresso';
+}
+
+function updateMethodFields() {
+  const espresso = isEspressoMethod();
+  const waterGroup = document.getElementById('group-water-grams');
+  const waterQualityGroup = document.getElementById('group-water-quality');
+  const totalTimeGroup = document.getElementById('group-total-time');
+  const espressoSection = document.getElementById('espresso-section');
+  const yieldInput = document.getElementById('field-yield-grams');
+  const waterInput = document.getElementById('field-water-grams');
+
+  if (espressoSection) espressoSection.classList.toggle('hidden', !espresso);
+  document.querySelectorAll('.espresso-only').forEach(el => el.classList.toggle('hidden', !espresso));
+
+  if (waterGroup) waterGroup.classList.toggle('hidden', espresso);
+  if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', espresso);
+  if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', espresso);
+
+  if (yieldInput) yieldInput.required = espresso;
+  if (waterInput) waterInput.required = !espresso;
+
+  updateRatio();
+}
+function updateRatio() {
+  const c = parseFloat(document.getElementById('field-coffee-grams').value);
+  const w = parseFloat(document.getElementById('field-water-grams').value);
+  const y = parseFloat(document.getElementById('field-yield-grams').value);
+  let ratio = null;
+  if (isEspressoMethod()) {
+    if (c > 0 && y > 0) ratio = (y / c).toFixed(1);
+  } else {
+    if (c > 0 && w > 0) ratio = (w / c).toFixed(1);
+  }
+  document.getElementById('ratio-value').textContent = ratio || '—';
+}
 document.getElementById('field-coffee-grams').addEventListener('input', updateRatio);
 document.getElementById('field-water-grams').addEventListener('input', updateRatio);
+document.getElementById('field-yield-grams').addEventListener('input', updateRatio);
 
 // Grind
 const grindSlider = document.getElementById('field-grind-level');
@@ -820,15 +878,55 @@ form.addEventListener('submit', async e => {
   const etapas = Array.from(stageCards).map((c, i) => { const n = c.dataset.stage; return { name: `Etapa ${i + 1}`, duration: c.querySelector(`[name="stage-duration-${n}"]`)?.value.trim() || '', pour: c.querySelector(`[name="stage-pour-${n}"]`)?.value || '', temp: c.querySelector(`[name="stage-temp-${n}"]`)?.value.trim() || '', notes: c.querySelector(`[name="stage-notes-${n}"]`)?.value.trim() || '' }; });
   const rc = form.querySelector('input[name="roast"]:checked');
   const visRadio = form.querySelector('input[name="visibility"]:checked');
-  const cg = document.getElementById('field-coffee-grams').value, wg = document.getElementById('field-water-grams').value;
-  const ratioVal = (parseFloat(cg) > 0 && parseFloat(wg) > 0) ? `1:${(parseFloat(wg) / parseFloat(cg)).toFixed(1)}` : null;
+  const cg = document.getElementById('field-coffee-grams').value;
+  const wg = document.getElementById('field-water-grams').value;
+  const yg = document.getElementById('field-yield-grams').value;
+  let ratioVal = null;
+  if (isEspressoMethod()) {
+    if (parseFloat(cg) > 0 && parseFloat(yg) > 0) {
+      ratioVal = `1:${(parseFloat(yg) / parseFloat(cg)).toFixed(1)}`;
+    }
+  } else if (parseFloat(cg) > 0 && parseFloat(wg) > 0) {
+    ratioVal = `1:${(parseFloat(wg) / parseFloat(cg)).toFixed(1)}`;
+  }
 
   const btn = document.getElementById('btn-save'); btn.disabled = true; btn.textContent = 'Guardando…';
   try {
     let foto_url = editingId ? (await RecipeStore.get(editingId))?.foto_url : null;
     if (recipePhotoFile) foto_url = await uploadRecipePhoto(recipePhotoFile);
 
-    const row = { nombre, metodo, perfil_id: uid(), visibilidad: visRadio?.value || 'publica', fecha: document.getElementById('field-date').value || null, notas: document.getElementById('field-notes').value.trim() || null, nombre_cafe: document.getElementById('field-coffee-name').value.trim() || null, origen: document.getElementById('field-origin').value.trim() || null, tostador: document.getElementById('field-roaster').value.trim() || null, proceso: document.getElementById('field-process').value || null, tueste: rc?.value || null, foto_url, tipo_molino: document.getElementById('field-grinder').value || null, modelo_molino: document.getElementById('field-grinder-model').value.trim() || null, clicks_molienda: parseInt(document.getElementById('field-grind-level').value) || null, grind_setting: document.getElementById('field-grind-setting').value.trim() || null, temperatura: document.getElementById('field-temp').value || null, temp_unit: tempUnit, calidad_agua: document.getElementById('field-water-quality').value || null, coffee_grams: cg || null, water_grams: wg || null, ratio: ratioVal, yield_grams: document.getElementById('field-yield-grams').value || null, tiempo_total: document.getElementById('field-total-time').value.trim() || null, etapas };
+    const row = {
+      nombre,
+      metodo,
+      perfil_id: uid(),
+      visibilidad: visRadio?.value || 'publica',
+      fecha: document.getElementById('field-date').value || null,
+      notas: document.getElementById('field-notes').value.trim() || null,
+      nombre_cafe: document.getElementById('field-coffee-name').value.trim() || null,
+      origen: document.getElementById('field-origin').value.trim() || null,
+      tostador: document.getElementById('field-roaster').value.trim() || null,
+      proceso: document.getElementById('field-process').value || null,
+      tueste: rc?.value || null,
+      foto_url,
+      tipo_molino: document.getElementById('field-grinder').value || null,
+      modelo_molino: document.getElementById('field-grinder-model').value.trim() || null,
+      clicks_molienda: parseInt(document.getElementById('field-grind-level').value) || null,
+      grind_setting: document.getElementById('field-grind-setting').value.trim() || null,
+      temperatura: document.getElementById('field-temp').value || null,
+      temp_unit: tempUnit,
+      calidad_agua: document.getElementById('field-water-quality').value || null,
+      coffee_grams: cg || null,
+      water_grams: wg || null,
+      ratio: ratioVal,
+      yield_grams: yg || null,
+      tiempo_total: (isEspressoMethod()
+        ? document.getElementById('field-extraction-time').value.trim() || null
+        : document.getElementById('field-total-time').value.trim() || null),
+      maquina: document.getElementById('field-machine').value.trim() || null,
+      presion_bars: document.getElementById('field-pressure').value || null,
+      pre_infusion_seg: document.getElementById('field-preinfusion').value || null,
+      etapas
+    };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);
     showToast(editingId ? '¡Receta actualizada! ☕' : '¡Receta en el menú! ☕', 'success'); await renderFeed(); showAppView('feed');
   } catch (err) { console.error(err); showToast('Algo salió mal, intenta de nuevo', 'error'); }
@@ -1167,6 +1265,10 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!confi
 // ═══════════════════════════════════════════════════════════
 document.getElementById('field-date').value = new Date().toISOString().split('T')[0];
 // Auth state is handled entirely by onAuthStateChange listener above
+
+// Initialize method-specific form state
+document.getElementById('field-method').addEventListener('change', updateMethodFields);
+updateMethodFields();
 
 // Deep link: open recipe modal if URL is /recipe/[id] on load
 try {

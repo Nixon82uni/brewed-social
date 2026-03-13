@@ -1415,6 +1415,11 @@ textarea {
   margin-bottom: 0.7rem;
 }
 
+.espresso-only.hidden,
+.espresso-toggle.hidden {
+  display: none;
+}
+
 .field-row:last-child {
   margin-bottom: 0;
 }
