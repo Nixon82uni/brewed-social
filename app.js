@@ -44,12 +44,12 @@ document.getElementById('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
-  if (!email || !pass) { showToast('Completa todos los campos', 'error'); return; }
+  if (!email || !pass) { showToast('Falta el ingrediente principal', 'error'); return; }
   try {
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     if (error) throw error;
     showToast('¡Bienvenido!', 'success');
-  } catch (err) { showToast(err.message, 'error'); }
+  } catch (err) { showToast('Algo salió mal, intenta de nuevo', 'error'); }
 });
 
 // Register
@@ -59,7 +59,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
   const pass = document.getElementById('reg-pass').value;
   const username = document.getElementById('reg-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
   const display_name = document.getElementById('reg-displayname').value.trim();
-  if (!email || !pass || !username || !display_name) { showToast('Completa todos los campos', 'error'); return; }
+  if (!email || !pass || !username || !display_name) { showToast('Falta el ingrediente principal', 'error'); return; }
   try {
     const { data, error } = await sb.auth.signUp({ email, password: pass });
     if (error) throw error;
@@ -71,7 +71,7 @@ document.getElementById('register-form').addEventListener('submit', async e => {
     } else {
       showToast('¡Cuenta creada! Revisa tu email para confirmar.', 'success');
     }
-  } catch (err) { showToast(err.message, 'error'); }
+  } catch (err) { showToast('Algo salió mal, intenta de nuevo', 'error'); }
 });
 
 // Toggle Login / Register
@@ -115,7 +115,7 @@ document.getElementById('btn-auth-close')?.addEventListener('click', closeAuthMo
 
 function requireAuth() {
   if (uid()) return true;
-  showToast('Inicia sesión para continuar', 'error');
+  showToast('Necesitas tu taza para esto — inicia sesión', 'error');
   openAuthModal();
   return false;
 }
@@ -449,7 +449,7 @@ async function renderFeed(filter) {
         grid.appendChild(buildCard(r, profilesCache[r.perfil_id], likeCounts[i], myLikes[i], saveCounts[i], mySaves[i]));
       });
     }
-  } catch (err) { console.error(err); hideSkeleton(); showToast('Error cargando feed', 'error'); }
+  } catch (err) { console.error(err); hideSkeleton(); showToast('Se enfrió el café ☕ Recarga e intenta de nuevo', 'error'); }
 }
 
 function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
@@ -472,9 +472,9 @@ function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
       btn.querySelector('span').textContent = res.count;
       btn.classList.add('pulse');
       setTimeout(() => btn.classList.remove('pulse'), 400);
-      showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success');
+      showToast(res.saved ? 'En tu recetario 🔖' : 'Eliminada del recetario', 'success');
     } catch {
-      showToast('Error', 'error');
+      showToast('Algo salió mal, intenta de nuevo', 'error');
     }
   });
 
@@ -490,7 +490,7 @@ function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
       btn.classList.add('pulse');
       setTimeout(() => btn.classList.remove('pulse'), 400);
     } catch {
-      showToast('Error', 'error');
+      showToast('Algo salió mal, intenta de nuevo', 'error');
     }
   });
   const authorEl = card.querySelector('.card-author'); if (authorEl) authorEl.addEventListener('click', e => { e.stopPropagation(); openProfileView(authorEl.dataset.uid); });
@@ -711,8 +711,8 @@ document.getElementById('edit-profile-form').addEventListener('submit', async e 
     if (error) throw error;
     currentProfile = { ...currentProfile, ...updates };
     profilesCache[uid()] = currentProfile;
-    updateNavAvatar(); closeEP(); showToast('Perfil actualizado', 'success');
-  } catch (err) { showToast(`Error: ${err.message}`, 'error'); }
+    updateNavAvatar(); closeEP(); showToast('Perfil actualizado ✓', 'success');
+  } catch (err) { showToast('Algo salió mal, intenta de nuevo', 'error'); }
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -765,7 +765,7 @@ document.getElementById('btn-add-stage').addEventListener('click', () => addStag
 // Submit
 form.addEventListener('submit', async e => {
   e.preventDefault(); const nombre = document.getElementById('field-name').value.trim(), metodo = document.getElementById('field-method').value;
-  if (!nombre) { showToast('Nombre obligatorio', 'error'); return; } if (!metodo) { showToast('Selecciona método', 'error'); return; }
+  if (!nombre) { showToast('¿Cómo se llama esta receta?', 'error'); return; } if (!metodo) { showToast('¿Con qué la preparaste?', 'error'); return; }
   const stageCards = document.querySelectorAll('.stage-card');
   const etapas = Array.from(stageCards).map((c, i) => { const n = c.dataset.stage; return { name: `Etapa ${i + 1}`, duration: c.querySelector(`[name="stage-duration-${n}"]`)?.value.trim() || '', pour: c.querySelector(`[name="stage-pour-${n}"]`)?.value || '', temp: c.querySelector(`[name="stage-temp-${n}"]`)?.value.trim() || '', notes: c.querySelector(`[name="stage-notes-${n}"]`)?.value.trim() || '' }; });
   const rc = form.querySelector('input[name="roast"]:checked');
@@ -780,8 +780,8 @@ form.addEventListener('submit', async e => {
 
     const row = { nombre, metodo, perfil_id: uid(), visibilidad: visRadio?.value || 'publica', fecha: document.getElementById('field-date').value || null, notas: document.getElementById('field-notes').value.trim() || null, nombre_cafe: document.getElementById('field-coffee-name').value.trim() || null, origen: document.getElementById('field-origin').value.trim() || null, tostador: document.getElementById('field-roaster').value.trim() || null, proceso: document.getElementById('field-process').value || null, tueste: rc?.value || null, foto_url, tipo_molino: document.getElementById('field-grinder').value || null, modelo_molino: document.getElementById('field-grinder-model').value.trim() || null, clicks_molienda: parseInt(document.getElementById('field-grind-level').value) || null, grind_setting: document.getElementById('field-grind-setting').value.trim() || null, temperatura: document.getElementById('field-temp').value || null, temp_unit: tempUnit, calidad_agua: document.getElementById('field-water-quality').value || null, coffee_grams: cg || null, water_grams: wg || null, ratio: ratioVal, yield_grams: document.getElementById('field-yield-grams').value || null, tiempo_total: document.getElementById('field-total-time').value.trim() || null, etapas };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);
-    showToast(editingId ? '✓ Actualizada' : '✓ Publicada', 'success'); await renderFeed(); showAppView('feed');
-  } catch (err) { console.error(err); showToast(`Error: ${err.message}`, 'error'); }
+    showToast(editingId ? '¡Receta actualizada! ☕' : '¡Receta en el menú! ☕', 'success'); await renderFeed(); showAppView('feed');
+  } catch (err) { console.error(err); showToast('Algo salió mal, intenta de nuevo', 'error'); }
   btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 10l4.5 4.5L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Publicar';
 });
 
@@ -929,7 +929,7 @@ document.getElementById('btn-send-comment').addEventListener('click', async () =
     input.value = '';
     clearReplyTo();
     await loadComments(modalRecipeId);
-  } catch (err) { showToast('Error enviando comentario', 'error'); }
+  } catch (err) { showToast('Algo salió mal, intenta de nuevo', 'error'); }
 });
 document.getElementById('comment-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('btn-send-comment').click(); } });
 document.getElementById('btn-modal-like').addEventListener('click', async () => {
@@ -944,7 +944,7 @@ document.getElementById('btn-modal-like').addEventListener('click', async () => 
     setTimeout(() => btn.classList.remove('pulse'), 400);
     syncCardLikeState(modalRecipeId, res.liked, res.count);
   } catch {
-    showToast('Error', 'error');
+    showToast('Algo salió mal, intenta de nuevo', 'error');
   }
 });
 
@@ -959,9 +959,9 @@ document.getElementById('btn-modal-save').addEventListener('click', async () => 
     btn.classList.add('pulse');
     setTimeout(() => btn.classList.remove('pulse'), 400);
     syncCardSaveState(modalRecipeId, res.saved, res.count);
-    showToast(res.saved ? '🔖 Guardada' : 'Eliminada de guardados', 'success');
+    showToast(res.saved ? 'En tu recetario 🔖' : 'Eliminada del recetario', 'success');
   } catch {
-    showToast('Error', 'error');
+    showToast('Algo salió mal, intenta de nuevo', 'error');
   }
 });
 
@@ -996,7 +996,7 @@ document.getElementById('btn-modal-edit').addEventListener('click', () => { cons
 const confirmOverlay = document.getElementById('confirm-overlay'); let pendingDeleteId = null;
 document.getElementById('btn-modal-delete').addEventListener('click', () => { pendingDeleteId = modalRecipeId; confirmOverlay.classList.remove('hidden'); });
 document.getElementById('btn-confirm-cancel').addEventListener('click', () => { confirmOverlay.classList.add('hidden'); pendingDeleteId = null; });
-document.getElementById('btn-confirm-ok').addEventListener('click', async () => { if (pendingDeleteId) { try { await RecipeStore.delete(pendingDeleteId); confirmOverlay.classList.add('hidden'); closeModal(); await renderFeed(); showToast('Eliminada', 'error'); } catch { showToast('Error', 'error'); } } });
+document.getElementById('btn-confirm-ok').addEventListener('click', async () => { if (pendingDeleteId) { try { await RecipeStore.delete(pendingDeleteId); confirmOverlay.classList.add('hidden'); closeModal(); await renderFeed(); showToast('Receta eliminada', 'error'); } catch { showToast('Algo salió mal, intenta de nuevo', 'error'); } } });
 confirmOverlay.addEventListener('click', e => { if (e.target === confirmOverlay) { confirmOverlay.classList.add('hidden'); pendingDeleteId = null; } });
 
 // ═══════════════════════════════════════════════════════════
@@ -1064,7 +1064,7 @@ document.getElementById('btn-mark-all-read').addEventListener('click', async () 
     document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
     refreshNotifBadge();
     showToast('Todo marcado como leído', 'success');
-  } catch { showToast('Error', 'error'); }
+  } catch { showToast('Algo salió mal, intenta de nuevo', 'error'); }
 });
 
 // ── Nav ───────────────────────────────────────────────────
