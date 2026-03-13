@@ -5,17 +5,24 @@
 
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  --bg: #0D0A0B;
-  --bg-2: #14100F;
+  --color-espresso: #1C0A00;
+  --color-roast: #3D1A00;
+  --color-caramel: #6F3A1F;
+  --color-honey: #C4862B;
+  --color-cream: #E8C07D;
+  --color-milk: #F5ECD7;
+
+  --bg: var(--color-espresso);
+  --bg-2: var(--color-roast);
   --bg-3: #1E1712;
   --bg-card: #1A1410;
   --border: rgba(255, 255, 255, 0.07);
   --border-h: rgba(255, 255, 255, 0.13);
-  --accent: #C9783E;
-  --accent-2: #E8944A;
+  --accent: var(--color-caramel);
+  --accent-2: var(--color-honey);
   --amber: #F0A855;
   --amber-light: #F5C97C;
-  --text-1: #F2EDE8;
+  --text-1: var(--color-milk);
   --text-2: #A89A8E;
   --text-3: #6B5C52;
   --danger: #C0454F;
