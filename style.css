@@ -5,26 +5,34 @@
 
 /* ── Tokens ─────────────────────────────────────────────── */
 :root {
-  --color-espresso: #1C0A00;
-  --color-roast: #3D1A00;
-  --color-caramel: #6F3A1F;
-  --color-honey: #C4862B;
-  --color-cream: #E8C07D;
-  --color-milk: #F5ECD7;
+  /* Coffee-inspired palette */
+  --color-noir: #0D0D0D;
+  --color-roast: #1A1208;
+  --color-toasted: #C4621A;
+  --color-orange: #E8852A;
+  --color-cherry: #C0392B;
+  --color-honey: #E8C07D;
+  --color-cream: #FAF0E0;
 
-  --bg: var(--color-espresso);
+  /* Backwards-compatible aliases */
+  --color-espresso: var(--color-noir);
+  --color-caramel: var(--color-orange);
+  --color-milk: var(--color-cream);
+
+  /* Semantic mappings */
+  --bg: var(--color-noir);
   --bg-2: var(--color-roast);
   --bg-3: var(--color-roast);
   --bg-card: var(--color-roast);
-  --border: rgba(245, 236, 215, 0.08);
-  --border-h: rgba(245, 236, 215, 0.18);
-  --accent: var(--color-caramel);
-  --accent-2: var(--color-honey);
+  --border: rgba(250, 240, 224, 0.06);
+  --border-h: rgba(250, 240, 224, 0.14);
+  --accent: var(--color-orange);
+  --accent-2: var(--color-toasted);
   --amber: var(--color-honey);
   --amber-light: var(--color-cream);
-  --text-1: var(--color-milk);
-  --text-2: var(--color-cream);
-  --text-3: #9A7A55;
+  --text-1: var(--color-cream);
+  --text-2: #C4A882;
+  --text-3: #6A5040;
   --danger: #C0454F;
   --danger-h: #E0525E;
   --success: #5BAD7A;
@@ -32,7 +40,7 @@
   --radius-lg: 20px;
   --radius-xl: 28px;
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 0 40px rgba(196, 134, 43, 0.12);
+  --shadow-glow: 0 0 40px rgba(232, 192, 125, 0.14);
   --font: 'Outfit', system-ui, sans-serif;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -203,7 +211,7 @@ textarea {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1.1rem;
-  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
+  background: linear-gradient(135deg, var(--color-orange), var(--color-toasted));
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
@@ -324,9 +332,9 @@ textarea {
 
 .btn-icon.btn-like:hover,
 .btn-icon.btn-like.liked {
-  background: rgba(196, 134, 43, 0.15);
-  color: var(--color-honey);
-  border-color: rgba(196, 134, 43, 0.3);
+  background: rgba(192, 57, 43, 0.16);
+  color: var(--color-cherry);
+  border-color: rgba(192, 57, 43, 0.36);
 }
 
 .btn-icon.pulse {
@@ -336,7 +344,7 @@ textarea {
 /* ── Follow Button ───────────────────────────────────────── */
 .btn-follow {
   padding: 0.45rem 1.5rem;
-  background: linear-gradient(135deg, var(--color-caramel), var(--color-honey));
+  background: linear-gradient(135deg, var(--color-orange), var(--color-toasted));
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
@@ -590,9 +598,9 @@ textarea {
   text-transform: uppercase;
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
-  background: rgba(196, 134, 43, 0.12);
-  color: var(--color-honey);
-  border: 1px solid rgba(196, 134, 43, 0.2);
+  background: rgba(232, 133, 42, 0.12);
+  color: var(--color-orange);
+  border: 1px solid rgba(232, 133, 42, 0.22);
   flex-shrink: 0;
 }
 
@@ -683,7 +691,7 @@ textarea {
 
 .card-like-btn:hover,
 .card-like-btn.liked {
-  color: var(--color-honey);
+  color: var(--color-cherry);
 }
 
 .card-like-btn.pulse {
@@ -2032,9 +2040,9 @@ select option {
   text-transform: uppercase;
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
-  background: rgba(196, 134, 43, 0.12);
-  color: var(--color-honey);
-  border: 1px solid rgba(196, 134, 43, 0.2);
+  background: rgba(232, 133, 42, 0.12);
+  color: var(--color-orange);
+  border: 1px solid rgba(232, 133, 42, 0.22);
   margin-bottom: 0.4rem;
 }
 
