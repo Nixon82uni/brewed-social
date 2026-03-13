@@ -842,6 +842,13 @@ const modal = document.getElementById('detail-modal'); let modalRecipeId = null;
 
 async function openModal(id) {
   const r = await RecipeStore.get(id); if (!r) return; modalRecipeId = id;
+  // Deep link: update URL to /recipe/[id] without reload
+  try {
+    const targetPath = `/recipe/${id}`;
+    if (window.location.pathname !== targetPath) {
+      history.pushState({ recipeId: id }, '', targetPath);
+    }
+  } catch {}
   const wrap = document.getElementById('modal-photo-wrap'), img = document.getElementById('modal-photo');
   if (r.foto_url) { img.src = r.foto_url; wrap.classList.remove('hidden'); } else wrap.classList.add('hidden');
   const author = r.perfil_id ? await getProfile(r.perfil_id) : null;
@@ -1032,7 +1039,17 @@ function syncCardSaveState(recipeId, isSaved, count) {
   btn.querySelector('svg path').setAttribute('fill', isSaved ? 'currentColor' : 'none');
 }
 
-function closeModal() { modal.classList.add('hidden'); document.body.style.overflow = ''; modalRecipeId = null; }
+function closeModal() {
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  modalRecipeId = null;
+  // Restore root URL when modal closes
+  try {
+    if (window.location.pathname.startsWith('/recipe/')) {
+      history.pushState({}, '', '/');
+    }
+  } catch {}
+}
 document.getElementById('btn-modal-close').addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 document.getElementById('btn-modal-edit').addEventListener('click', () => { const id = modalRecipeId; closeModal(); openEditForm(id); });
@@ -1128,3 +1145,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!confi
 // ═══════════════════════════════════════════════════════════
 document.getElementById('field-date').value = new Date().toISOString().split('T')[0];
 // Auth state is handled entirely by onAuthStateChange listener above
+
+// Deep link: open recipe modal if URL is /recipe/[id] on load
+try {
+  const path = window.location.pathname || '';
+  const match = path.match(/^\/recipe\/(.+)$/);
+  if (match && match[1]) {
+    const deepLinkId = match[1];
+    // Defer to allow initial view/render to settle
+    setTimeout(() => {
+      openModal(deepLinkId);
+    }, 400);
+  }
+} catch {}

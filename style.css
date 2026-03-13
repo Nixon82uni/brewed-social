@@ -2492,6 +2492,13 @@ select option {
   animation: cardIn 0.3s var(--ease);
 }
 
+/* Ensure forgot password form matches auth card styling */
+#forgot-form.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+
 .auth-card.hidden {
   display: none;
 }
