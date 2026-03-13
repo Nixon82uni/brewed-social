@@ -479,7 +479,7 @@ function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
   const authorHTML = author ? `<div class="card-author" data-uid="${author.id}"><div class="card-author-avatar">${author.foto_perfil ? `<img src="${author.foto_perfil}" alt="">` : `<span>${author.display_name[0].toUpperCase()}</span>`}</div><span class="card-author-name">${esc(author.display_name)}</span></div>` : '';
   const photoHTML = r.foto_url ? `<img class="card-photo" src="${r.foto_url}" alt="" loading="lazy"/>` : `<div class="card-photo-placeholder">☕</div>`;
 
-  card.innerHTML = `${photoHTML}<div class="card-body">${authorHTML}<div class="card-header"><div><div class="card-title">${esc(r.nombre)}</div>${(r.nombre_cafe || r.origen) ? `<div class="card-origin">${esc([r.nombre_cafe, r.origen].filter(Boolean).join(' · '))}</div>` : ''}</div><span class="card-method-badge">${esc(r.metodo || '')}</span></div><div class="card-params"><div class="card-param"><div class="card-param-label">Café</div><div class="card-param-value">${cg ? cg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Agua</div><div class="card-param-value">${wg ? wg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Ratio</div><div class="card-param-value">${ratio}</div></div><div class="card-param"><div class="card-param-label">Temp.</div><div class="card-param-value">${r.temperatura ? r.temperatura + '°C' : '—'}</div></div><div class="card-param"><div class="card-param-label">Tueste</div><div class="card-param-value">${esc(r.tueste || '—')}</div></div><div class="card-param"><div class="card-param-label">Molienda</div><div class="card-param-value">${r.clicks_molienda ? GRIND_LABELS[r.clicks_molienda] || r.clicks_molienda : '—'}</div></div></div><div class="card-footer"><span class="card-date">${timeAgo(r.created_at)}</span><div class="card-footer-right"><button class="card-save-btn${isSaved ? ' saved' : ''}" data-id="${r.id}" title="Guardar"><svg viewBox="0 0 20 20" fill="${isSaved ? 'currentColor' : 'none'}"><path d="M5 2h10a1 1 0 011 1v15l-6-4-6 4V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${saveCount}</span></button><button class="card-like-btn${isLiked ? ' liked' : ''}" data-id="${r.id}"><svg viewBox="0 0 20 20" fill="${isLiked ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${likeCount}</span></button>${r.etapas?.length ? `<span class="card-stages-count">${r.etapas.length} etapa${r.etapas.length > 1 ? 's' : ''}</span>` : ''}</div></div></div>`;
+  card.innerHTML = `${photoHTML}<div class="card-body">${authorHTML}<div class="card-header"><div><div class="card-title">${esc(r.nombre)}</div>${(r.nombre_cafe || r.origen) ? `<div class="card-origin">${esc([r.nombre_cafe, r.origen].filter(Boolean).join(' · '))}</div>` : ''}</div><span class="card-method-badge">${esc(r.metodo || '')}</span></div><div class="card-params"><div class="card-param"><div class="card-param-label">Café</div><div class="card-param-value">${cg ? cg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Agua</div><div class="card-param-value">${wg ? wg + 'g' : '—'}</div></div><div class="card-param"><div class="card-param-label">Ratio</div><div class="card-param-value">${ratio}</div></div><div class="card-param"><div class="card-param-label">Temp.</div><div class="card-param-value">${r.temperatura ? r.temperatura + '°C' : '—'}</div></div><div class="card-param"><div class="card-param-label">Tueste</div><div class="card-param-value">${esc(r.tueste || '—')}</div></div><div class="card-param"><div class="card-param-label">Molienda</div><div class="card-param-value">${r.clicks_molienda ? GRIND_LABELS[r.clicks_molienda] || r.clicks_molienda : '—'}</div></div></div><div class="card-footer"><span class="card-date">${timeAgo(r.created_at)}</span><div class="card-footer-right"><button class="card-save-btn${isSaved ? ' saved' : ''}" data-id="${r.id}" title="Guardar"><i class="${isSaved ? 'ph-bookmark-simple-fill' : 'ph-bookmark-simple'}"></i><span>${saveCount}</span></button><button class="card-like-btn${isLiked ? ' liked' : ''}" data-id="${r.id}"><i class="${isLiked ? 'ph-heart-fill' : 'ph-heart'}"></i><span>${likeCount}</span></button>${r.etapas?.length ? `<span class="card-stages-count">${r.etapas.length} etapa${r.etapas.length > 1 ? 's' : ''}</span>` : ''}</div></div></div>`;
 
   card.querySelector('.card-save-btn').addEventListener('click', async e => {
     e.stopPropagation();
@@ -488,7 +488,8 @@ function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
     try {
       const res = await SaveStore.toggle(r.id);
       btn.classList.toggle('saved', res.saved);
-      btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none');
+      const icon = btn.querySelector('i');
+      if (icon) icon.className = res.saved ? 'ph-bookmark-simple-fill' : 'ph-bookmark-simple';
       btn.querySelector('span').textContent = res.count;
       btn.classList.add('pulse');
       setTimeout(() => btn.classList.remove('pulse'), 400);
@@ -506,7 +507,8 @@ function buildCard(r, author, likeCount, isLiked, saveCount, isSaved) {
       const res = await LikeStore.toggle(r.id);
       btn.querySelector('span').textContent = res.count;
       btn.classList.toggle('liked', res.liked);
-      btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+      const icon = btn.querySelector('i');
+      if (icon) icon.className = res.liked ? 'ph-heart-fill' : 'ph-heart';
       btn.classList.add('pulse');
       setTimeout(() => btn.classList.remove('pulse'), 400);
     } catch {
@@ -828,8 +830,12 @@ async function openModal(id) {
   const [likeCount, isLiked, saveCount, isSaved] = await Promise.all([LikeStore.count(id), LikeStore.isLiked(id), SaveStore.count(id), SaveStore.isSaved(id)]);
   document.getElementById('modal-like-count').textContent = likeCount;
   document.getElementById('modal-save-count').textContent = saveCount;
-  const likeBtn = document.getElementById('btn-modal-like'); likeBtn.classList.toggle('liked', isLiked); likeBtn.querySelector('svg path').setAttribute('fill', isLiked ? 'currentColor' : 'none');
-  const saveBtn = document.getElementById('btn-modal-save'); saveBtn.classList.toggle('saved', isSaved); saveBtn.querySelector('svg path').setAttribute('fill', isSaved ? 'currentColor' : 'none');
+  const likeBtn = document.getElementById('btn-modal-like');
+  likeBtn.classList.toggle('liked', isLiked);
+  likeBtn.innerHTML = `<i class="${isLiked ? 'ph-heart-fill' : 'ph-heart'}"></i>`;
+  const saveBtn = document.getElementById('btn-modal-save');
+  saveBtn.classList.toggle('saved', isSaved);
+  saveBtn.innerHTML = `<i class="${isSaved ? 'ph-bookmark-simple-fill' : 'ph-bookmark-simple'}"></i>`;
   const mp = []; if (r.created_at) mp.push(fmtDate(r.created_at)); if (r.tostador) mp.push(r.tostador);
   document.getElementById('modal-meta').textContent = mp.join(' · ');
   const cg = parseFloat(r.coffee_grams), wg = parseFloat(r.water_grams); const ratio = (cg > 0 && wg > 0) ? `1:${(wg / cg).toFixed(1)}` : null;
@@ -954,7 +960,8 @@ document.getElementById('btn-modal-like').addEventListener('click', async () => 
     document.getElementById('modal-like-count').textContent = res.count;
     const btn = document.getElementById('btn-modal-like');
     btn.classList.toggle('liked', res.liked);
-    btn.querySelector('svg path').setAttribute('fill', res.liked ? 'currentColor' : 'none');
+    const icon = btn.querySelector('i');
+    if (icon) icon.className = res.liked ? 'ph-heart-fill' : 'ph-heart';
     btn.classList.add('pulse');
     setTimeout(() => btn.classList.remove('pulse'), 400);
     syncCardLikeState(modalRecipeId, res.liked, res.count);
@@ -970,7 +977,8 @@ document.getElementById('btn-modal-save').addEventListener('click', async () => 
     const btn = document.getElementById('btn-modal-save');
     btn.classList.toggle('saved', res.saved);
     document.getElementById('modal-save-count').textContent = res.count;
-    btn.querySelector('svg path').setAttribute('fill', res.saved ? 'currentColor' : 'none');
+    const icon = btn.querySelector('i');
+    if (icon) icon.className = res.saved ? 'ph-bookmark-simple-fill' : 'ph-bookmark-simple';
     btn.classList.add('pulse');
     setTimeout(() => btn.classList.remove('pulse'), 400);
     syncCardSaveState(modalRecipeId, res.saved, res.count);
