@@ -2485,18 +2485,20 @@ select option {
 .auth-card {
   width: 100%;
   max-width: 380px;
-  background: var(--bg-card);
+  background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: 2rem;
   animation: cardIn 0.3s var(--ease);
+  color: var(--text-1);
 }
 
 /* Ensure forgot password form matches auth card styling */
 #forgot-form.auth-card {
-  background: var(--bg-card);
+  background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
+  color: var(--text-1);
 }
 
 .auth-card.hidden {
