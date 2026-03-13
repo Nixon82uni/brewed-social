@@ -1017,6 +1017,28 @@ document.getElementById('btn-modal-save').addEventListener('click', async () => 
   }
 });
 
+document.getElementById('btn-modal-share').addEventListener('click', async () => {
+  if (!modalRecipeId) return;
+  const url = `https://brewed.me/recipe/${modalRecipeId}`;
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      showToast('Enlace copiado ☕', 'success');
+    } else {
+      // Fallback: try using a temporary input
+      const tmp = document.createElement('input');
+      tmp.value = url;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      document.body.removeChild(tmp);
+      showToast('Enlace copiado ☕', 'success');
+    }
+  } catch (err) {
+    showToast('Algo salió mal, intenta de nuevo', 'error');
+  }
+});
+
 // Sync feed card like button after modal toggle
 function syncCardLikeState(recipeId, isLiked, count) {
   const card = grid.querySelector(`.recipe-card[data-id="${recipeId}"]`);
