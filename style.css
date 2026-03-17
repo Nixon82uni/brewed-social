@@ -3158,6 +3158,144 @@ select option {
 }
 
 /* ═══ RESPONSIVE ═══ */
+@media (max-width: 768px) {
+  /* Make text readable on mobile */
+  body {
+    font-size: 14px;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font-size: 14px;
+  }
+
+  /* One-column feed cards */
+  .recipe-grid,
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Keep card images in a consistent ratio */
+  .card-photo {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  /* Feed tabs should scroll instead of wrap */
+  .feed-tabs {
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  .feed-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .feed-tab {
+    flex: 0 0 auto;
+    font-size: 0.875rem; /* >= 14px */
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Fixed bottom navbar on mobile */
+  .navbar {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    border-bottom: none;
+    border-top: 1px solid var(--border);
+    padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: none;
+  }
+  .nav-links,
+  .nav-right {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-around;
+  }
+
+  /* Prevent content from being hidden behind bottom nav */
+  #view-feed,
+  #view-search,
+  #view-form,
+  #view-notifications {
+    padding-bottom: calc(4rem + 120px + env(safe-area-inset-bottom));
+  }
+
+  /* Make form fields single-column */
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+  .ratio-row {
+    grid-template-columns: 1fr;
+  }
+  .ratio-display {
+    width: 100%;
+  }
+  .ratio-label {
+    font-size: 0.75rem; /* >= 12px -> bump for mobile readability */
+  }
+  .stage-fields {
+    grid-template-columns: 1fr;
+  }
+
+  /* Touch targets: minimum 44px */
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-follow,
+  .btn-back,
+  .filter-btn,
+  .nav-btn,
+  .pv-tab {
+    min-height: 44px;
+  }
+  .btn-icon,
+  .modal-close,
+  .card-like-btn,
+  .card-save-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .nav-btn,
+  .filter-btn {
+    font-size: 0.875rem; /* >= 14px */
+  }
+
+  /* Auth modal links/buttons: easier tapping */
+  .auth-switch button,
+  .auth-forgot button {
+    min-height: 44px;
+    padding: 0.4rem 0;
+  }
+
+  /* Full-screen modals with scroll */
+  .modal-overlay {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  .modal-card {
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+}
+
 @media (max-width: 600px) {
   .advanced-filters {
     grid-template-columns: 1fr;
