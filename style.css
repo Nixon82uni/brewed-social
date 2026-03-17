@@ -1426,6 +1426,10 @@ textarea {
   display: none;
 }
 
+.ap-only.hidden {
+  display: none;
+}
+
 .field-row:last-child {
   margin-bottom: 0;
 }

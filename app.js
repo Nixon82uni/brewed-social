@@ -822,6 +822,9 @@ function isEspressoMethod() {
 function isFrenchPressMethod() {
   return document.getElementById('field-method').value === 'French Press';
 }
+function isAeroPressMethod() {
+  return document.getElementById('field-method').value === 'AeroPress';
+}
 
 function updateBloomFields() {
   const bloomSelect = document.getElementById('field-bloom');
@@ -838,6 +841,7 @@ function updateCrustFields() {
 function updateMethodFields() {
   const espresso = isEspressoMethod();
   const french = isFrenchPressMethod();
+  const aeropress = isAeroPressMethod();
 
   const waterGroup = document.getElementById('group-water-grams');
   const waterQualityGroup = document.getElementById('group-water-quality');
@@ -856,16 +860,19 @@ function updateMethodFields() {
   updateBloomFields();
   updateCrustFields();
 
+  // AeroPress–specific visibility
+  document.querySelectorAll('.ap-only').forEach(el => el.classList.toggle('hidden', !aeropress));
+
   // Water grams: hidden only for espresso
   if (waterGroup) waterGroup.classList.toggle('hidden', espresso);
 
-  // Water quality + total time: hidden for espresso and French Press
-  const hideWaterMeta = espresso || french;
+  // Water quality + total time: hidden for espresso, French Press, and AeroPress
+  const hideWaterMeta = espresso || french || aeropress;
   if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', hideWaterMeta);
   if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', hideWaterMeta);
 
-  // Yield group: hidden only for French Press
-  if (yieldGroup) yieldGroup.classList.toggle('hidden', french);
+  // Yield group: hidden for French Press and AeroPress
+  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress);
 
   // Required flags
   if (yieldInput) yieldInput.required = espresso;     // required only for espresso
@@ -961,6 +968,18 @@ form.addEventListener('submit', async e => {
       maquina: document.getElementById('field-machine').value.trim() || null,
       presion_bars: document.getElementById('field-pressure').value || null,
       pre_infusion_seg: document.getElementById('field-preinfusion').value || null,
+      // French Press fields
+      bloom: document.getElementById('field-bloom')?.value === 'yes' || null,
+      bloom_time_seg: document.getElementById('field-bloom-time')?.value || null,
+      bloom_water_g: document.getElementById('field-bloom-water')?.value || null,
+      steeping_time_min: document.getElementById('field-steeping-time')?.value || null,
+      break_crust: document.getElementById('field-break-crust')?.value === 'yes' || null,
+      break_crust_time_seg: document.getElementById('field-crust-extra-time')?.value || null,
+      // AeroPress fields
+      aeropress_position: document.getElementById('field-ap-position')?.value || null,
+      aeropress_steep_seg: document.getElementById('field-ap-steep')?.value || null,
+      aeropress_press_seg: document.getElementById('field-ap-press')?.value || null,
+      aeropress_filter: document.getElementById('field-ap-filter')?.value || null,
       etapas
     };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);
