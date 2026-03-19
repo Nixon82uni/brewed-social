@@ -1408,6 +1408,18 @@ textarea {
   letter-spacing: 0.04em;
 }
 
+.req-asterisk {
+  color: var(--danger);
+  font-weight: 900;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.invalid-field {
+  border-color: rgba(192, 69, 79, 0.95) !important;
+  box-shadow: 0 0 0 3px rgba(192, 69, 79, 0.18) !important;
+}
+
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

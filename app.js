@@ -1057,8 +1057,40 @@ document.getElementById('btn-add-stage').addEventListener('click', () => addStag
 
 // Submit
 form.addEventListener('submit', async e => {
-  e.preventDefault(); const nombre = document.getElementById('field-name').value.trim(), metodo = document.getElementById('field-method').value;
-  if (!nombre) { showToast('¿Cómo se llama esta receta?', 'error'); return; } if (!metodo) { showToast('¿Con qué la preparaste?', 'error'); return; }
+  e.preventDefault();
+  const fieldNombre = document.getElementById('field-name');
+  const fieldMetodo = document.getElementById('field-method');
+  const fieldCoffee = document.getElementById('field-coffee-grams');
+  const fieldWater = document.getElementById('field-water-grams');
+  const fieldYield = document.getElementById('field-yield-grams');
+  const waterGroup = document.getElementById('group-water-grams');
+
+  // Clear previous validation highlights
+  [fieldNombre, fieldMetodo, fieldCoffee, fieldWater, fieldYield].forEach(el => el?.classList?.remove('invalid-field'));
+
+  const isEmpty = v => v === null || v === undefined || String(v).trim() === '';
+  const isWaterRequired = !(waterGroup && waterGroup.classList.contains('hidden'));
+  const isYieldRequired = !!fieldYield?.required;
+
+  const requiredChecks = [
+    { el: fieldNombre, ok: !isEmpty(fieldNombre?.value), toast: '¿Cómo se llama esta receta?' },
+    { el: fieldMetodo, ok: !isEmpty(fieldMetodo?.value), toast: '¿Con qué la preparaste?' },
+    { el: fieldCoffee, ok: !isEmpty(fieldCoffee?.value), toast: '¿Cuántos gramos de café usaste?' }
+  ];
+  if (isWaterRequired) requiredChecks.push({ el: fieldWater, ok: !isEmpty(fieldWater?.value), toast: '¿Cuánta agua usaste?' });
+  if (isYieldRequired) requiredChecks.push({ el: fieldYield, ok: !isEmpty(fieldYield?.value), toast: '¿Cuántos gramos de rendimiento usaste?' });
+
+  for (const chk of requiredChecks) {
+    if (!chk.ok) {
+      chk.el?.classList?.add('invalid-field');
+      try { chk.el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+      showToast(chk.toast, 'error');
+      return;
+    }
+  }
+
+  const nombre = fieldNombre.value.trim();
+  const metodo = fieldMetodo.value;
   const stageCards = document.querySelectorAll('.stage-card');
   const etapas = Array.from(stageCards).map((c, i) => { const n = c.dataset.stage; return { name: `Etapa ${i + 1}`, duration: c.querySelector(`[name="stage-duration-${n}"]`)?.value.trim() || '', pour: c.querySelector(`[name="stage-pour-${n}"]`)?.value || '', temp: c.querySelector(`[name="stage-temp-${n}"]`)?.value.trim() || '', notes: c.querySelector(`[name="stage-notes-${n}"]`)?.value.trim() || '' }; });
   const rc = form.querySelector('input[name="roast"]:checked');
@@ -1179,7 +1211,10 @@ form.addEventListener('submit', async e => {
     };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);
     showToast(editingId ? '¡Receta actualizada! ☕' : '¡Receta en el menú! ☕', 'success'); await renderFeed(); showAppView('feed');
-  } catch (err) { console.error(err); showToast('Algo salió mal, intenta de nuevo', 'error'); }
+  } catch (err) {
+    console.error('Supabase save recipe error:', err);
+    showToast(err?.message || err?.error_description || err?.hint || 'Algo salió mal, intenta de nuevo', 'error');
+  }
   btn.disabled = false; btn.innerHTML = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 10l4.5 4.5L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Publicar';
 });
 

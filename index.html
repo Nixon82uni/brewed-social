@@ -318,10 +318,10 @@
           </div>
           <div class="form-section">
             <h3 class="section-label"><span class="section-icon">📋</span> Información General</h3>
-            <div class="field-group"><label for="field-name">Nombre de la receta *</label><input type="text"
+            <div class="field-group"><label for="field-name">Nombre de la receta <span class="req-asterisk">*</span></label><input type="text"
                 id="field-name" placeholder="Ej. V60 Etiopía Yirgacheffe" required /></div>
             <div class="field-row">
-              <div class="field-group"><label for="field-method">Método *</label>
+              <div class="field-group"><label for="field-method">Método <span class="req-asterisk">*</span></label>
                 <div class="custom-select"><select id="field-method" required>
                     <option value="">Seleccionar…</option>
                     <option>Espresso</option>
@@ -438,17 +438,17 @@
           <div class="form-section">
             <h3 class="section-label"><span class="section-icon">⚖️</span> Dosis y Ratio</h3>
             <div class="field-row ratio-row">
-              <div class="field-group"><label for="field-coffee-grams">Café (g) *</label><input type="number"
+              <div class="field-group"><label for="field-coffee-grams">Café (g) <span class="req-asterisk">*</span></label><input type="number"
                   id="field-coffee-grams" min="0" step="0.1" placeholder="18" required /></div>
               <div class="ratio-display-wrap" id="ratio-display-wrap">
                 <div class="ratio-display"><span class="ratio-label">Ratio</span><span class="ratio-value"
                     id="ratio-value">—</span><span class="ratio-unit">1 : X</span></div>
               </div>
-              <div class="field-group espresso-toggle" id="group-water-grams"><label for="field-water-grams">Agua (g) *</label><input type="number"
+              <div class="field-group espresso-toggle" id="group-water-grams"><label for="field-water-grams">Agua (g) <span class="req-asterisk">*</span></label><input type="number"
                   id="field-water-grams" min="0" step="1" placeholder="300" required /></div>
             </div>
             <div class="field-row">
-              <div class="field-group"><label for="field-yield-grams">Rendimiento (g)</label><input type="number"
+              <div class="field-group"><label for="field-yield-grams">Rendimiento (g) <span class="req-asterisk">*</span></label><input type="number"
                   id="field-yield-grams" min="0" step="1" placeholder="250" /></div>
               <div class="field-group espresso-toggle" id="group-total-time"><label for="field-total-time">Tiempo total</label><input type="text"
                   id="field-total-time" placeholder="3:30 min" /></div>
