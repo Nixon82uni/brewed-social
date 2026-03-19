@@ -885,6 +885,12 @@ async function openEditForm(id) {
   document.getElementById('field-moka-heat-level').value = r.moka_heat_level || '';
   document.getElementById('field-moka-first-drops').value = r.moka_first_drops || '';
   document.getElementById('field-moka-total-time').value = r.moka_total_time || r.tiempo_total || '';
+  // Cold Brew fields
+  document.getElementById('field-cold-brew-steep-hours').value = r.cold_brew_steep_hours ?? '';
+  document.getElementById('field-cold-brew-temp').value = r.cold_brew_temp || '';
+  document.getElementById('field-cold-brew-filter').value = r.cold_brew_filter || '';
+  document.getElementById('field-cold-brew-concentrate').value = r.cold_brew_concentrate === true ? 'yes' : r.cold_brew_concentrate === false ? 'no' : '';
+  document.getElementById('field-cold-brew-dilution').value = r.cold_brew_dilution || '';
   updateMethodFields();
   if (r.tueste) { const rad = form.querySelector(`input[name="roast"][value="${r.tueste}"]`); if (rad) rad.checked = true; }
   if (r.visibilidad) { const vr = form.querySelector(`input[name="visibility"][value="${r.visibilidad}"]`); if (vr) vr.checked = true; }
@@ -914,6 +920,9 @@ function isAeroPressMethod() {
 function isMokaMethod() {
   return document.getElementById('field-method').value === 'Moka';
 }
+function isColdBrewMethod() {
+  return document.getElementById('field-method').value === 'Cold Brew';
+}
 
 function updateBloomFields() {
   const bloomSelect = document.getElementById('field-bloom');
@@ -932,6 +941,7 @@ function updateMethodFields() {
   const french = isFrenchPressMethod();
   const aeropress = isAeroPressMethod();
   const moka = isMokaMethod();
+  const coldBrew = isColdBrewMethod();
 
   const waterGroup = document.getElementById('group-water-grams');
   const waterQualityGroup = document.getElementById('group-water-quality');
@@ -941,6 +951,7 @@ function updateMethodFields() {
   const waterInput = document.getElementById('field-water-grams');
   const yieldGroup = document.getElementById('field-yield-grams')?.closest('.field-group');
   const ratioWrap = document.getElementById('ratio-display-wrap');
+  const tempFieldGroup = document.getElementById('field-temp')?.closest('.field-group');
 
   // Espresso-specific visibility
   if (espressoSection) espressoSection.classList.toggle('hidden', !espresso);
@@ -958,16 +969,25 @@ function updateMethodFields() {
   document.querySelectorAll('.moka-only').forEach(el => el.classList.toggle('hidden', !moka));
   if (ratioWrap) ratioWrap.classList.toggle('hidden', moka);
 
+  // Cold Brew–specific visibility
+  document.querySelectorAll('.cold-brew-only').forEach(el => el.classList.toggle('hidden', !coldBrew));
+  const concentrateSelect = document.getElementById('field-cold-brew-concentrate');
+  const dilutionYes = concentrateSelect && concentrateSelect.value === 'yes';
+  document.querySelectorAll('.cold-brew-dilution-extra').forEach(el => el.classList.toggle('hidden', !coldBrew || !dilutionYes));
+
   // Water grams: hidden for espresso and Moka
   if (waterGroup) waterGroup.classList.toggle('hidden', espresso || moka);
 
   // Water quality + total time: hidden for espresso, French Press, AeroPress, and Moka
-  const hideWaterMeta = espresso || french || aeropress || moka;
+  const hideWaterMeta = espresso || french || aeropress || moka || coldBrew;
   if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', hideWaterMeta);
   if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', hideWaterMeta);
 
   // Yield group: hidden for French Press, AeroPress, and Moka
-  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress || moka);
+  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress || moka || coldBrew);
+
+  // Temperature field: hidden for Cold Brew
+  if (tempFieldGroup) tempFieldGroup.classList.toggle('hidden', coldBrew);
 
   // Required flags
   if (yieldInput) yieldInput.required = espresso;     // required only for espresso
@@ -994,6 +1014,8 @@ document.getElementById('field-yield-grams').addEventListener('input', updateRat
 // French Press bloom/crust toggles
 document.getElementById('field-bloom')?.addEventListener('change', updateBloomFields);
 document.getElementById('field-break-crust')?.addEventListener('change', updateCrustFields);
+// Cold Brew concentrate toggle
+document.getElementById('field-cold-brew-concentrate')?.addEventListener('change', updateMethodFields);
 
 // Grind
 const grindSlider = document.getElementById('field-grind-level');
@@ -1020,6 +1042,8 @@ form.addEventListener('submit', async e => {
   const wg = document.getElementById('field-water-grams').value;
   const yg = document.getElementById('field-yield-grams').value;
   const mokaTotal = document.getElementById('field-moka-total-time')?.value.trim() || null;
+  const coldBrewSteepHours = document.getElementById('field-cold-brew-steep-hours')?.value.trim() || null;
+  const coldBrewTotalTime = coldBrewSteepHours ? `${coldBrewSteepHours} h` : null;
   let ratioVal = null;
   if (isEspressoMethod()) {
     if (parseFloat(cg) > 0 && parseFloat(yg) > 0) {
@@ -1051,17 +1075,19 @@ form.addEventListener('submit', async e => {
       modelo_molino: document.getElementById('field-grinder-model').value.trim() || null,
       clicks_molienda: parseInt(document.getElementById('field-grind-level').value) || null,
       grind_setting: document.getElementById('field-grind-setting').value.trim() || null,
-      temperatura: document.getElementById('field-temp').value || null,
-      temp_unit: tempUnit,
-      calidad_agua: isMokaMethod() ? null : (document.getElementById('field-water-quality').value || null),
+      temperatura: isColdBrewMethod() ? null : (document.getElementById('field-temp').value || null),
+      temp_unit: isColdBrewMethod() ? null : tempUnit,
+      calidad_agua: isMokaMethod() || isColdBrewMethod() ? null : (document.getElementById('field-water-quality').value || null),
       coffee_grams: cg || null,
       water_grams: isMokaMethod() ? null : (wg || null),
       ratio: isMokaMethod() ? null : ratioVal,
-      yield_grams: isMokaMethod() ? null : (yg || null),
+      yield_grams: isMokaMethod() || isColdBrewMethod() ? null : (yg || null),
       tiempo_total: (isEspressoMethod()
         ? document.getElementById('field-extraction-time').value.trim() || null
         : isMokaMethod()
           ? mokaTotal
+          : isColdBrewMethod()
+            ? coldBrewTotalTime
           : document.getElementById('field-total-time').value.trim() || null),
       maquina: document.getElementById('field-machine').value.trim() || null,
       presion_bars: document.getElementById('field-pressure').value || null,
@@ -1088,6 +1114,20 @@ form.addEventListener('submit', async e => {
       moka_heat_level: isMokaMethod() ? (document.getElementById('field-moka-heat-level')?.value || null) : null,
       moka_first_drops: isMokaMethod() ? (document.getElementById('field-moka-first-drops')?.value.trim() || null) : null,
       moka_total_time: isMokaMethod() ? mokaTotal : null,
+      // Cold Brew fields
+      cold_brew_steep_hours: isColdBrewMethod() ? (coldBrewSteepHours ? parseFloat(coldBrewSteepHours) : null) : null,
+      cold_brew_temp: isColdBrewMethod() ? (document.getElementById('field-cold-brew-temp')?.value || null) : null,
+      cold_brew_filter: isColdBrewMethod() ? (document.getElementById('field-cold-brew-filter')?.value || null) : null,
+      cold_brew_concentrate: isColdBrewMethod()
+        ? (document.getElementById('field-cold-brew-concentrate')?.value === 'yes'
+          ? true
+          : document.getElementById('field-cold-brew-concentrate')?.value === 'no'
+            ? false
+            : null)
+        : null,
+      cold_brew_dilution: isColdBrewMethod() && document.getElementById('field-cold-brew-concentrate')?.value === 'yes'
+        ? (document.getElementById('field-cold-brew-dilution')?.value.trim() || null)
+        : null,
       etapas
     };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);
@@ -1131,7 +1171,22 @@ async function openModal(id) {
   const mp = []; if (r.created_at) mp.push(fmtDate(r.created_at)); if (r.tostador) mp.push(r.tostador);
   document.getElementById('modal-meta').textContent = mp.join(' · ');
   const cg = parseFloat(r.coffee_grams), wg = parseFloat(r.water_grams); const ratio = (cg > 0 && wg > 0) ? `1:${(wg / cg).toFixed(1)}` : null;
-  const params = [{ icon: '🫘', label: 'Café', value: r.nombre_cafe || '—' }, { icon: '🌍', label: 'Origen', value: r.origen || '—' }, { icon: '🔥', label: 'Tueste', value: r.tueste || '—' }, { icon: '🧪', label: 'Proceso', value: r.proceso || '—' }, { icon: '⚙️', label: 'Molino', value: r.modelo_molino || r.tipo_molino || '—' }, { icon: '📏', label: 'Molienda', value: r.clicks_molienda ? `${GRIND_LABELS[r.clicks_molienda] || ''} (${r.clicks_molienda}/10)` : '—' }, { icon: '⚖️', label: 'Café', value: cg ? `${cg}g` : '—' }, { icon: '💧', label: 'Agua', value: wg ? `${wg}g` : '—' }, { icon: '📊', label: 'Ratio', value: ratio || '—', hl: true }, { icon: '🌡️', label: 'Temp.', value: r.temperatura ? `${r.temperatura}°${r.temp_unit || 'C'}` : '—' }, { icon: '🥛', label: 'Agua', value: r.calidad_agua || '—' }, { icon: '⏱️', label: 'Tiempo', value: r.tiempo_total || '—' }];
+  const cbTemp = r.cold_brew_temp === 'room' ? 'Ambiente' : r.cold_brew_temp === 'fridge' ? 'Heladera' : '';
+  const cbFilter = r.cold_brew_filter === 'paper' ? 'Papel' : r.cold_brew_filter === 'cloth' ? 'Tela' : r.cold_brew_filter === 'metal' ? 'Metal' : r.cold_brew_filter === 'none' ? 'Ninguno' : '';
+  const cbConcentrate = r.cold_brew_concentrate === true ? 'Sí' : r.cold_brew_concentrate === false ? 'No' : '';
+  const cbDilution = r.cold_brew_concentrate === true ? (r.cold_brew_dilution || '—') : '—';
+
+  const params = [{ icon: '🫘', label: 'Café', value: r.nombre_cafe || '—' }, { icon: '🌍', label: 'Origen', value: r.origen || '—' }, { icon: '🔥', label: 'Tueste', value: r.tueste || '—' }, { icon: '🧪', label: 'Proceso', value: r.proceso || '—' }, { icon: '⚙️', label: 'Molino', value: r.modelo_molino || r.tipo_molino || '—' }, { icon: '📏', label: 'Molienda', value: r.clicks_molienda ? `${GRIND_LABELS[r.clicks_molienda] || ''} (${r.clicks_molienda}/10)` : '—' }, { icon: '⚖️', label: 'Café', value: cg ? `${cg}g` : '—' }, { icon: '💧', label: 'Agua', value: wg ? `${wg}g` : '—' }, { icon: '📊', label: 'Ratio', value: ratio || '—', hl: true }, { icon: '🌡️', label: 'Temp.', value: r.temperatura ? `${r.temperatura}°${r.temp_unit || 'C'}` : '—' }, { icon: '🥛', label: 'Agua', value: r.calidad_agua || '—' }, { icon: '⏱️', label: 'Tiempo', value: r.tiempo_total || '—' },
+    ...(r.metodo === 'Cold Brew'
+      ? [
+        { icon: '🫧', label: 'Infusión (h)', value: r.cold_brew_steep_hours != null ? `${r.cold_brew_steep_hours} h` : '—' },
+        { icon: '🌡️', label: 'Temperatura de infusión', value: cbTemp || '—' },
+        { icon: '🧫', label: 'Tipo de filtro', value: cbFilter || '—' },
+        { icon: '🧊', label: '¿Es concentrado?', value: cbConcentrate || '—' },
+        { icon: '🧪', label: 'Ratio de dilución', value: cbDilution || '—' }
+      ]
+      : [])
+  ];
   document.getElementById('modal-params').innerHTML = params.filter(p => p.value !== '—').map(p => `<div class="param-chip"><div class="param-chip-icon">${p.icon}</div><div class="param-chip-label">${esc(p.label)}</div><div class="param-chip-value${p.hl ? ' highlight' : ''}">${esc(p.value)}</div></div>`).join('');
   const sw = document.getElementById('modal-stages-wrap'), se = document.getElementById('modal-stages');
   if (r.etapas?.length) { se.innerHTML = r.etapas.map((s, i) => `<div class="timeline-step"><div class="timeline-dot"><div class="timeline-dot-circle">${i + 1}</div><div class="timeline-dot-line"></div></div><div class="timeline-body"><div class="timeline-step-name">${esc(s.name)}</div>${s.pour ? `<div class="timeline-notes">Vertido: ${esc(s.pour)}g${s.temp ? ' · ' + esc(s.temp) : ''}</div>` : ''}${s.notes ? `<div class="timeline-notes">${esc(s.notes)}</div>` : ''}</div><div class="timeline-time">${esc(s.duration || '')}</div></div>`).join(''); sw.classList.remove('hidden'); } else sw.classList.add('hidden');

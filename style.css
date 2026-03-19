@@ -1434,6 +1434,10 @@ textarea {
   display: none;
 }
 
+.cold-brew-only.hidden {
+  display: none;
+}
+
 .field-row:last-child {
   margin-bottom: 0;
 }

@@ -538,6 +538,53 @@
                 <input type="number" id="field-ap-press" min="0" step="1" />
               </div>
             </div>
+            <!-- Cold Brew specific fields -->
+            <div class="field-row cold-brew-only hidden">
+              <div class="field-group">
+                <label for="field-cold-brew-steep-hours">Tiempo de infusión (horas)</label>
+                <input type="number" id="field-cold-brew-steep-hours" min="0" step="0.1" placeholder="12" />
+              </div>
+              <div class="field-group">
+                <label for="field-cold-brew-temp">Temperatura de infusión</label>
+                <div class="custom-select">
+                  <select id="field-cold-brew-temp">
+                    <option value="">Seleccionar…</option>
+                    <option value="room">Temperatura ambiente</option>
+                    <option value="fridge">Heladera</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-row cold-brew-only hidden">
+              <div class="field-group">
+                <label for="field-cold-brew-filter">Tipo de filtro</label>
+                <div class="custom-select">
+                  <select id="field-cold-brew-filter">
+                    <option value="">Seleccionar…</option>
+                    <option value="paper">Papel</option>
+                    <option value="cloth">Tela</option>
+                    <option value="metal">Metal</option>
+                    <option value="none">Ninguno</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-cold-brew-concentrate">¿Es concentrado?</label>
+                <div class="custom-select">
+                  <select id="field-cold-brew-concentrate">
+                    <option value="">Seleccionar…</option>
+                    <option value="no">No</option>
+                    <option value="yes">Sí</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-row cold-brew-dilution-extra hidden">
+              <div class="field-group">
+                <label for="field-cold-brew-dilution">Ratio de dilución</label>
+                <input type="text" id="field-cold-brew-dilution" placeholder="1:2" />
+              </div>
+            </div>
             <!-- Moka specific fields -->
             <div class="field-row moka-only hidden">
               <div class="field-group">
