@@ -126,6 +126,10 @@ function ensurePasswordRecoveryForm() {
       <label for="recovery-new-password">Contraseña nueva</label>
       <input type="password" id="recovery-new-password" placeholder="••••••••" required minlength="6" />
     </div>
+    <div class="field-group">
+      <label for="recovery-confirm-password">Confirmar contraseña</label>
+      <input type="password" id="recovery-confirm-password" placeholder="••••••••" required minlength="6" />
+    </div>
     <button type="submit" class="btn-primary btn-auth">Guardar contraseña</button>
     <p class="auth-switch">
       <button type="button" id="show-login-from-recovery">Volver al inicio de sesión</button>
@@ -135,19 +139,22 @@ function ensurePasswordRecoveryForm() {
   f.addEventListener('submit', async e => {
     e.preventDefault();
     const newPassword = document.getElementById('recovery-new-password').value.trim();
-    if (!newPassword) { showToast('Algo salió mal, intenta de nuevo', 'error'); return; }
+    const confirmPassword = document.getElementById('recovery-confirm-password').value.trim();
+    if (!newPassword || !confirmPassword) { showToast('Algo salió mal, intenta de nuevo', 'error'); return; }
+    if (newPassword !== confirmPassword) { showToast('Las contraseñas no coinciden', 'error'); return; }
     try {
       await sb.auth.updateUser({ password: newPassword });
-      showToast('Contraseña restablecida ✓', 'success');
+      showToast('¡Contraseña actualizada! ☕', 'success');
       f.classList.add('hidden');
       document.getElementById('recovery-new-password').value = '';
+      document.getElementById('recovery-confirm-password').value = '';
       loginFormEl.classList.remove('hidden');
       registerFormEl.classList.add('hidden');
       forgotFormEl.classList.add('hidden');
       closeAuthModal();
     } catch (err) {
       console.error(err);
-      showToast('Algo salió mal, intenta de nuevo', 'error');
+      showToast(err?.message || 'Algo salió mal, intenta de nuevo', 'error');
     }
   });
 
