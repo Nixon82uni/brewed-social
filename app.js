@@ -1029,9 +1029,8 @@ async function openModal(id) {
   // Deep link: update URL to /recipe/[id] without reload
   try {
     const targetPath = `/recipe/${id}`;
-    const targetUrl = `https://brewed.me/recipe/${id}`;
     if (window.location.pathname !== targetPath) {
-      history.pushState({ recipeId: id }, '', targetUrl);
+      history.pushState({ recipeId: id }, '', targetPath);
     }
   } catch {}
   const wrap = document.getElementById('modal-photo-wrap'), img = document.getElementById('modal-photo');
@@ -1253,7 +1252,7 @@ function closeModal() {
   // Restore root URL when modal closes
   try {
     if (window.location.pathname.startsWith('/recipe/')) {
-      history.pushState({}, '', 'https://brewed.me/');
+      history.pushState({}, '', '/');
     }
   } catch {}
 }
