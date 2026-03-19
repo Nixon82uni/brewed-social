@@ -114,6 +114,63 @@ document.getElementById('forgot-form').addEventListener('submit', async e => {
   }
 });
 
+function ensurePasswordRecoveryForm() {
+  let f = document.getElementById('recovery-form');
+  if (f) return f;
+  const container = document.querySelector('#auth-modal .auth-container') || loginFormEl.parentElement;
+  f = document.createElement('form');
+  f.id = 'recovery-form';
+  f.className = 'auth-card hidden';
+  f.innerHTML = `<h2>Nueva contraseña</h2>
+    <div class="field-group">
+      <label for="recovery-new-password">Contraseña nueva</label>
+      <input type="password" id="recovery-new-password" placeholder="••••••••" required minlength="6" />
+    </div>
+    <button type="submit" class="btn-primary btn-auth">Guardar contraseña</button>
+    <p class="auth-switch">
+      <button type="button" id="show-login-from-recovery">Volver al inicio de sesión</button>
+    </p>`;
+  container.appendChild(f);
+
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const newPassword = document.getElementById('recovery-new-password').value.trim();
+    if (!newPassword) { showToast('Algo salió mal, intenta de nuevo', 'error'); return; }
+    try {
+      await sb.auth.updateUser({ password: newPassword });
+      showToast('Contraseña restablecida ✓', 'success');
+      f.classList.add('hidden');
+      document.getElementById('recovery-new-password').value = '';
+      loginFormEl.classList.remove('hidden');
+      registerFormEl.classList.add('hidden');
+      forgotFormEl.classList.add('hidden');
+      closeAuthModal();
+    } catch (err) {
+      console.error(err);
+      showToast('Algo salió mal, intenta de nuevo', 'error');
+    }
+  });
+
+  document.getElementById('show-login-from-recovery').addEventListener('click', () => {
+    f.classList.add('hidden');
+    loginFormEl.classList.remove('hidden');
+    registerFormEl.classList.add('hidden');
+    forgotFormEl.classList.add('hidden');
+  });
+
+  return f;
+}
+
+function showPasswordRecoveryForm() {
+  openAuthModal();
+  const f = ensurePasswordRecoveryForm();
+  loginFormEl.classList.add('hidden');
+  registerFormEl.classList.add('hidden');
+  forgotFormEl.classList.add('hidden');
+  f.classList.remove('hidden');
+  document.getElementById('recovery-new-password')?.focus();
+}
+
 // Logout
 document.getElementById('btn-logout').addEventListener('click', async () => {
   await sb.auth.signOut();
@@ -152,6 +209,11 @@ function requireAuth() {
 
 async function handleAuthChange(event, session) {
   try {
+    if (event === 'PASSWORD_RECOVERY') {
+      // Supabase requires the user to set a new password after the recovery link loads
+      showPasswordRecoveryForm();
+      return;
+    }
     if (session?.user) {
       // Prevent re-entry if same user already loaded (INITIAL_SESSION + SIGNED_IN fire back-to-back)
       if (authHandled && currentUser?.id === session.user.id) return;
