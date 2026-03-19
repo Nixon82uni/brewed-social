@@ -585,6 +585,84 @@
                 <input type="text" id="field-cold-brew-dilution" placeholder="1:2" />
               </div>
             </div>
+            <!-- Chemex specific fields -->
+            <div class="field-row chemex-only hidden">
+              <div class="field-group">
+                <label for="field-chemex-size">Tamaño Chemex</label>
+                <div class="custom-select">
+                  <select id="field-chemex-size">
+                    <option value="">Seleccionar…</option>
+                    <option value="3">3 tazas</option>
+                    <option value="6">6 tazas</option>
+                    <option value="8">8 tazas</option>
+                    <option value="10">10 tazas</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-chemex-filter">Tipo de filtro</label>
+                <div class="custom-select">
+                  <select id="field-chemex-filter">
+                    <option value="">Seleccionar…</option>
+                    <option value="square">Square</option>
+                    <option value="circle">Circle</option>
+                    <option value="half moon">Half moon</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-row chemex-only hidden">
+              <div class="field-group">
+                <label for="field-chemex-bloom-time">Tiempo de bloom (seg)</label>
+                <input type="number" id="field-chemex-bloom-time" min="0" step="1" />
+              </div>
+              <div class="field-group">
+                <label for="field-chemex-bloom-water">Agua de bloom (g)</label>
+                <input type="number" id="field-chemex-bloom-water" min="0" step="1" />
+              </div>
+            </div>
+            <div class="field-row chemex-only hidden">
+              <div class="field-group" style="grid-column: 1 / -1;">
+                <label for="field-chemex-pours">Número de vertidos</label>
+                <input type="number" id="field-chemex-pours" min="0" step="1" />
+              </div>
+            </div>
+            <!-- Sifón specific fields -->
+            <div class="field-row siphon-only hidden">
+              <div class="field-group">
+                <label for="field-siphon-steep">Tiempo en cámara superior (seg)</label>
+                <input type="number" id="field-siphon-steep" min="0" step="1" />
+              </div>
+              <div class="field-group">
+                <label for="field-siphon-heat-source">Fuente de calor</label>
+                <div class="custom-select">
+                  <select id="field-siphon-heat-source">
+                    <option value="">Seleccionar…</option>
+                    <option value="alcohol">Alcohol</option>
+                    <option value="butane">Butane</option>
+                    <option value="electric">Eléctrica</option>
+                    <option value="halogen">Halógena</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-row siphon-only hidden">
+              <div class="field-group">
+                <label for="field-siphon-stir-method">Tipo de paleta</label>
+                <div class="custom-select">
+                  <select id="field-siphon-stir-method">
+                    <option value="">Seleccionar…</option>
+                    <option value="bamboo">Bambú</option>
+                    <option value="metal">Metal</option>
+                    <option value="glass">Vidrio</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-siphon-stirs">Número de movimientos</label>
+                <input type="number" id="field-siphon-stirs" min="0" step="1" />
+              </div>
+            </div>
             <!-- Moka specific fields -->
             <div class="field-row moka-only hidden">
               <div class="field-group">

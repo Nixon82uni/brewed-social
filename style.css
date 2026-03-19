@@ -1438,6 +1438,14 @@ textarea {
   display: none;
 }
 
+.chemex-only.hidden {
+  display: none;
+}
+
+.siphon-only.hidden {
+  display: none;
+}
+
 .field-row:last-child {
   margin-bottom: 0;
 }

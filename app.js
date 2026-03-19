@@ -891,6 +891,17 @@ async function openEditForm(id) {
   document.getElementById('field-cold-brew-filter').value = r.cold_brew_filter || '';
   document.getElementById('field-cold-brew-concentrate').value = r.cold_brew_concentrate === true ? 'yes' : r.cold_brew_concentrate === false ? 'no' : '';
   document.getElementById('field-cold-brew-dilution').value = r.cold_brew_dilution || '';
+  // Chemex fields
+  document.getElementById('field-chemex-size').value = r.chemex_size || '';
+  document.getElementById('field-chemex-filter').value = r.chemex_filter || '';
+  document.getElementById('field-chemex-bloom-time').value = r.chemex_bloom_time_seg ?? '';
+  document.getElementById('field-chemex-bloom-water').value = r.chemex_bloom_water_g ?? '';
+  document.getElementById('field-chemex-pours').value = r.chemex_pours ?? '';
+  // Sifón fields
+  document.getElementById('field-siphon-steep').value = r.siphon_steep_seg ?? '';
+  document.getElementById('field-siphon-heat-source').value = r.siphon_heat_source || '';
+  document.getElementById('field-siphon-stir-method').value = r.siphon_stir_method || '';
+  document.getElementById('field-siphon-stirs').value = r.siphon_stirs ?? '';
   updateMethodFields();
   if (r.tueste) { const rad = form.querySelector(`input[name="roast"][value="${r.tueste}"]`); if (rad) rad.checked = true; }
   if (r.visibilidad) { const vr = form.querySelector(`input[name="visibility"][value="${r.visibilidad}"]`); if (vr) vr.checked = true; }
@@ -924,6 +935,14 @@ function isColdBrewMethod() {
   return document.getElementById('field-method').value === 'Cold Brew';
 }
 
+function isChemexMethod() {
+  return document.getElementById('field-method').value === 'Chemex';
+}
+
+function isSiphonMethod() {
+  return document.getElementById('field-method').value === 'Sifón';
+}
+
 function updateBloomFields() {
   const bloomSelect = document.getElementById('field-bloom');
   const yes = bloomSelect && bloomSelect.value === 'yes';
@@ -942,6 +961,8 @@ function updateMethodFields() {
   const aeropress = isAeroPressMethod();
   const moka = isMokaMethod();
   const coldBrew = isColdBrewMethod();
+  const chemex = isChemexMethod();
+  const siphon = isSiphonMethod();
 
   const waterGroup = document.getElementById('group-water-grams');
   const waterQualityGroup = document.getElementById('group-water-quality');
@@ -979,12 +1000,12 @@ function updateMethodFields() {
   if (waterGroup) waterGroup.classList.toggle('hidden', espresso || moka);
 
   // Water quality + total time: hidden for espresso, French Press, AeroPress, and Moka
-  const hideWaterMeta = espresso || french || aeropress || moka || coldBrew;
+  const hideWaterMeta = espresso || french || aeropress || moka || coldBrew || chemex || siphon;
   if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', hideWaterMeta);
   if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', hideWaterMeta);
 
-  // Yield group: hidden for French Press, AeroPress, and Moka
-  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress || moka || coldBrew);
+  // Yield group: hidden for French Press, AeroPress, Moka, Cold Brew, Chemex, and Sifón
+  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress || moka || coldBrew || chemex || siphon);
 
   // Temperature field: hidden for Cold Brew
   if (tempFieldGroup) tempFieldGroup.classList.toggle('hidden', coldBrew);
@@ -992,6 +1013,10 @@ function updateMethodFields() {
   // Required flags
   if (yieldInput) yieldInput.required = espresso;     // required only for espresso
   if (waterInput) waterInput.required = !espresso && !moka;
+
+  // Chemex/Sifón visibility
+  document.querySelectorAll('.chemex-only').forEach(el => el.classList.toggle('hidden', !chemex));
+  document.querySelectorAll('.siphon-only').forEach(el => el.classList.toggle('hidden', !siphon));
 
   updateRatio();
 }
@@ -1044,6 +1069,11 @@ form.addEventListener('submit', async e => {
   const mokaTotal = document.getElementById('field-moka-total-time')?.value.trim() || null;
   const coldBrewSteepHours = document.getElementById('field-cold-brew-steep-hours')?.value.trim() || null;
   const coldBrewTotalTime = coldBrewSteepHours ? `${coldBrewSteepHours} h` : null;
+  const chemexBloomTime = document.getElementById('field-chemex-bloom-time')?.value.trim() || null;
+  const chemexBloomWater = document.getElementById('field-chemex-bloom-water')?.value.trim() || null;
+  const chemexPours = document.getElementById('field-chemex-pours')?.value.trim() || null;
+  const siphonSteep = document.getElementById('field-siphon-steep')?.value.trim() || null;
+  const siphonStirs = document.getElementById('field-siphon-stirs')?.value.trim() || null;
   let ratioVal = null;
   if (isEspressoMethod()) {
     if (parseFloat(cg) > 0 && parseFloat(yg) > 0) {
@@ -1077,18 +1107,24 @@ form.addEventListener('submit', async e => {
       grind_setting: document.getElementById('field-grind-setting').value.trim() || null,
       temperatura: isColdBrewMethod() ? null : (document.getElementById('field-temp').value || null),
       temp_unit: isColdBrewMethod() ? null : tempUnit,
-      calidad_agua: isMokaMethod() || isColdBrewMethod() ? null : (document.getElementById('field-water-quality').value || null),
+      calidad_agua: isMokaMethod() || isColdBrewMethod() || isChemexMethod() || isSiphonMethod()
+        ? null
+        : (document.getElementById('field-water-quality').value || null),
       coffee_grams: cg || null,
       water_grams: isMokaMethod() ? null : (wg || null),
       ratio: isMokaMethod() ? null : ratioVal,
-      yield_grams: isMokaMethod() || isColdBrewMethod() ? null : (yg || null),
+      yield_grams: isMokaMethod() || isColdBrewMethod() || isChemexMethod() || isSiphonMethod()
+        ? null
+        : (yg || null),
       tiempo_total: (isEspressoMethod()
         ? document.getElementById('field-extraction-time').value.trim() || null
         : isMokaMethod()
           ? mokaTotal
           : isColdBrewMethod()
             ? coldBrewTotalTime
-          : document.getElementById('field-total-time').value.trim() || null),
+            : (isChemexMethod() || isSiphonMethod())
+              ? null
+              : document.getElementById('field-total-time').value.trim() || null),
       maquina: document.getElementById('field-machine').value.trim() || null,
       presion_bars: document.getElementById('field-pressure').value || null,
       pre_infusion_seg: document.getElementById('field-preinfusion').value || null,
@@ -1128,6 +1164,17 @@ form.addEventListener('submit', async e => {
       cold_brew_dilution: isColdBrewMethod() && document.getElementById('field-cold-brew-concentrate')?.value === 'yes'
         ? (document.getElementById('field-cold-brew-dilution')?.value.trim() || null)
         : null,
+      // Chemex fields
+      chemex_size: isChemexMethod() ? document.getElementById('field-chemex-size')?.value || null : null,
+      chemex_filter: isChemexMethod() ? document.getElementById('field-chemex-filter')?.value || null : null,
+      chemex_bloom_time_seg: isChemexMethod() ? (chemexBloomTime ? parseInt(chemexBloomTime, 10) : null) : null,
+      chemex_bloom_water_g: isChemexMethod() ? (chemexBloomWater ? parseFloat(chemexBloomWater) : null) : null,
+      chemex_pours: isChemexMethod() ? (chemexPours ? parseInt(chemexPours, 10) : null) : null,
+      // Sifón fields
+      siphon_steep_seg: isSiphonMethod() ? (siphonSteep ? parseInt(siphonSteep, 10) : null) : null,
+      siphon_heat_source: isSiphonMethod() ? document.getElementById('field-siphon-heat-source')?.value || null : null,
+      siphon_stir_method: isSiphonMethod() ? document.getElementById('field-siphon-stir-method')?.value || null : null,
+      siphon_stirs: isSiphonMethod() ? (siphonStirs ? parseInt(siphonStirs, 10) : null) : null,
       etapas
     };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);
@@ -1176,16 +1223,99 @@ async function openModal(id) {
   const cbConcentrate = r.cold_brew_concentrate === true ? 'Sí' : r.cold_brew_concentrate === false ? 'No' : '';
   const cbDilution = r.cold_brew_concentrate === true ? (r.cold_brew_dilution || '—') : '—';
 
-  const params = [{ icon: '🫘', label: 'Café', value: r.nombre_cafe || '—' }, { icon: '🌍', label: 'Origen', value: r.origen || '—' }, { icon: '🔥', label: 'Tueste', value: r.tueste || '—' }, { icon: '🧪', label: 'Proceso', value: r.proceso || '—' }, { icon: '⚙️', label: 'Molino', value: r.modelo_molino || r.tipo_molino || '—' }, { icon: '📏', label: 'Molienda', value: r.clicks_molienda ? `${GRIND_LABELS[r.clicks_molienda] || ''} (${r.clicks_molienda}/10)` : '—' }, { icon: '⚖️', label: 'Café', value: cg ? `${cg}g` : '—' }, { icon: '💧', label: 'Agua', value: wg ? `${wg}g` : '—' }, { icon: '📊', label: 'Ratio', value: ratio || '—', hl: true }, { icon: '🌡️', label: 'Temp.', value: r.temperatura ? `${r.temperatura}°${r.temp_unit || 'C'}` : '—' }, { icon: '🥛', label: 'Agua', value: r.calidad_agua || '—' }, { icon: '⏱️', label: 'Tiempo', value: r.tiempo_total || '—' },
-    ...(r.metodo === 'Cold Brew'
-      ? [
-        { icon: '🫧', label: 'Infusión (h)', value: r.cold_brew_steep_hours != null ? `${r.cold_brew_steep_hours} h` : '—' },
-        { icon: '🌡️', label: 'Temperatura de infusión', value: cbTemp || '—' },
-        { icon: '🧫', label: 'Tipo de filtro', value: cbFilter || '—' },
-        { icon: '🧊', label: '¿Es concentrado?', value: cbConcentrate || '—' },
-        { icon: '🧪', label: 'Ratio de dilución', value: cbDilution || '—' }
-      ]
-      : [])
+  const hasVal = v => v !== null && v !== undefined && String(v).trim() !== '';
+  const yesNo = v => v === true ? 'Sí' : v === false ? 'No' : '—';
+
+  const espressoChips = r.metodo === 'Espresso'
+    ? [
+      { icon: '⚙️', label: 'Máquina', value: r.maquina || '—' },
+      { icon: '🌡️', label: 'Presión', value: hasVal(r.presion_bars) ? `${r.presion_bars} bar` : '—' },
+      { icon: '⏳', label: 'Pre-infusión (seg)', value: hasVal(r.pre_infusion_seg) ? `${r.pre_infusion_seg} seg` : '—' },
+      { icon: '⏱️', label: 'Extracción', value: hasVal(r.tiempo_total) ? `${r.tiempo_total}` : '—' }
+    ]
+    : [];
+
+  const frenchChips = r.metodo === 'French Press'
+    ? [
+      { icon: '🫧', label: '¿Hiciste bloom?', value: yesNo(r.bloom) },
+      { icon: '⏳', label: 'Tiempo de bloom (seg)', value: hasVal(r.bloom_time_seg) ? `${r.bloom_time_seg} seg` : '—' },
+      { icon: '💧', label: 'Agua de bloom (g)', value: hasVal(r.bloom_water_g) ? `${r.bloom_water_g} g` : '—' },
+      { icon: '⏱️', label: 'Tiempo de infusión (min)', value: hasVal(r.steeping_time_min) ? `${r.steeping_time_min} min` : '—' },
+      { icon: '🫧', label: '¿Rompiste la costra?', value: yesNo(r.break_crust) },
+      { icon: '⏳', label: 'Tiempo extra post-costra (seg)', value: hasVal(r.break_crust_time_seg) ? `${r.break_crust_time_seg} seg` : '—' }
+    ]
+    : [];
+
+  const aeroChips = r.metodo === 'AeroPress'
+    ? [
+      { icon: '🧠', label: 'Posición', value: r.aeropress_position ? (r.aeropress_position === 'normal' ? 'Normal' : 'Invertida') : '—' },
+      { icon: '⏱️', label: 'Tiempo de infusión (seg)', value: hasVal(r.aeropress_steep_seg) ? `${r.aeropress_steep_seg} seg` : '—' },
+      { icon: '⏱️', label: 'Tiempo de presión (seg)', value: hasVal(r.aeropress_press_seg) ? `${r.aeropress_press_seg} seg` : '—' },
+      { icon: '🧫', label: 'Tipo de filtro', value: r.aeropress_filter ? (r.aeropress_filter === 'paper' ? 'Papel' : r.aeropress_filter === 'metal' ? 'Metal' : r.aeropress_filter === 'cloth' ? 'Tela' : r.aeropress_filter) : '—' }
+    ]
+    : [];
+
+  const mokaChips = r.metodo === 'Moka'
+    ? [
+      { icon: '⚙️', label: 'Modelo', value: r.moka_model || '—' },
+      { icon: '☕', label: 'Tazas', value: hasVal(r.moka_cups) ? `${r.moka_cups}` : '—' },
+      { icon: '🔥', label: 'Fuente de calor', value: r.moka_heat_source ? (r.moka_heat_source === 'gas' ? 'Gas' : r.moka_heat_source === 'electric' ? 'Eléctrica' : r.moka_heat_source) : '—' },
+      { icon: '🌡️', label: 'Temperatura del agua', value: r.moka_water_temp ? (r.moka_water_temp === 'cold' ? 'Fría' : r.moka_water_temp === 'warm' ? 'Tibia' : r.moka_water_temp === 'hot' ? 'Caliente' : r.moka_water_temp === 'boiling' ? 'Hirviendo' : r.moka_water_temp) : '—' },
+      { icon: '🫧', label: '¿Precalentaste el agua?', value: yesNo(r.moka_preheated) },
+      { icon: '🔥', label: 'Nivel de calor', value: r.moka_heat_level ? (r.moka_heat_level === 'low' ? 'Bajo' : r.moka_heat_level === 'medium' ? 'Medio' : r.moka_heat_level === 'high' ? 'Alto' : r.moka_heat_level) : '—' },
+      { icon: '⏱️', label: 'Tiempo hasta primeras gotas', value: r.moka_first_drops || '—' }
+    ]
+    : [];
+
+  const coldChips = r.metodo === 'Cold Brew'
+    ? [
+      { icon: '🫧', label: 'Infusión (h)', value: hasVal(r.cold_brew_steep_hours) ? `${r.cold_brew_steep_hours} h` : '—' },
+      { icon: '🌡️', label: 'Temperatura de infusión', value: cbTemp || '—' },
+      { icon: '🧫', label: 'Tipo de filtro', value: cbFilter || '—' },
+      { icon: '🧊', label: '¿Es concentrado?', value: cbConcentrate || '—' },
+      { icon: '🧪', label: 'Ratio de dilución', value: cbDilution || '—' }
+    ]
+    : [];
+
+  const chemexChips = r.metodo === 'Chemex'
+    ? [
+      { icon: '🫙', label: 'Tamaño Chemex', value: hasVal(r.chemex_size) ? `${r.chemex_size} tazas` : '—' },
+      { icon: '🧫', label: 'Tipo de filtro', value: r.chemex_filter ? (r.chemex_filter === 'square' ? 'Square' : r.chemex_filter === 'circle' ? 'Circle' : r.chemex_filter === 'half moon' ? 'Half moon' : r.chemex_filter) : '—' },
+      { icon: '⏳', label: 'Tiempo de bloom (seg)', value: hasVal(r.chemex_bloom_time_seg) ? `${r.chemex_bloom_time_seg} seg` : '—' },
+      { icon: '💧', label: 'Agua de bloom (g)', value: hasVal(r.chemex_bloom_water_g) ? `${r.chemex_bloom_water_g} g` : '—' },
+      { icon: '↕️', label: 'Número de vertidos', value: hasVal(r.chemex_pours) ? `${r.chemex_pours}` : '—' }
+    ]
+    : [];
+
+  const siphonChips = r.metodo === 'Sifón'
+    ? [
+      { icon: '⏱️', label: 'Tiempo en cámara superior (seg)', value: hasVal(r.siphon_steep_seg) ? `${r.siphon_steep_seg} seg` : '—' },
+      { icon: '🔥', label: 'Fuente de calor', value: r.siphon_heat_source ? (r.siphon_heat_source === 'alcohol' ? 'Alcohol' : r.siphon_heat_source === 'butane' ? 'Butane' : r.siphon_heat_source === 'electric' ? 'Eléctrica' : r.siphon_heat_source === 'halogen' ? 'Halógena' : r.siphon_heat_source) : '—' },
+      { icon: '🪄', label: 'Tipo de paleta', value: r.siphon_stir_method ? (r.siphon_stir_method === 'bamboo' ? 'Bambú' : r.siphon_stir_method === 'metal' ? 'Metal' : r.siphon_stir_method === 'glass' ? 'Vidrio' : r.siphon_stir_method) : '—' },
+      { icon: '↕️', label: 'Número de movimientos', value: hasVal(r.siphon_stirs) ? `${r.siphon_stirs}` : '—' }
+    ]
+    : [];
+
+  const params = [
+    { icon: '🫘', label: 'Café', value: r.nombre_cafe || '—' },
+    { icon: '🌍', label: 'Origen', value: r.origen || '—' },
+    { icon: '🔥', label: 'Tueste', value: r.tueste || '—' },
+    { icon: '🧪', label: 'Proceso', value: r.proceso || '—' },
+    { icon: '⚙️', label: 'Molino', value: r.modelo_molino || r.tipo_molino || '—' },
+    { icon: '📏', label: 'Molienda', value: r.clicks_molienda ? `${GRIND_LABELS[r.clicks_molienda] || ''} (${r.clicks_molienda}/10)` : '—' },
+    { icon: '⚖️', label: 'Café', value: cg ? `${cg}g` : '—' },
+    { icon: '💧', label: 'Agua', value: wg ? `${wg}g` : '—' },
+    { icon: '📊', label: 'Ratio', value: ratio || '—', hl: true },
+    { icon: '🌡️', label: 'Temp.', value: r.temperatura ? `${r.temperatura}°${r.temp_unit || 'C'}` : '—' },
+    { icon: '🥛', label: 'Agua', value: r.calidad_agua || '—' },
+    { icon: '⏱️', label: 'Tiempo', value: r.tiempo_total || '—' },
+    ...espressoChips,
+    ...frenchChips,
+    ...aeroChips,
+    ...mokaChips,
+    ...coldChips,
+    ...chemexChips,
+    ...siphonChips
   ];
   document.getElementById('modal-params').innerHTML = params.filter(p => p.value !== '—').map(p => `<div class="param-chip"><div class="param-chip-icon">${p.icon}</div><div class="param-chip-label">${esc(p.label)}</div><div class="param-chip-value${p.hl ? ' highlight' : ''}">${esc(p.value)}</div></div>`).join('');
   const sw = document.getElementById('modal-stages-wrap'), se = document.getElementById('modal-stages');
