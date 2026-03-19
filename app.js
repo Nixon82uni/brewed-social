@@ -135,6 +135,7 @@ function ensurePasswordRecoveryForm() {
       <button type="button" id="show-login-from-recovery">Volver al inicio de sesión</button>
     </p>`;
   container.appendChild(f);
+  console.log('PASSWORD_RECOVERY UI created', { form: f, container });
 
   f.addEventListener('submit', async e => {
     e.preventDefault();
@@ -175,6 +176,8 @@ function showPasswordRecoveryForm() {
   registerFormEl.classList.add('hidden');
   forgotFormEl.classList.add('hidden');
   f.classList.remove('hidden');
+  const m = document.getElementById('auth-modal');
+  console.log('PASSWORD_RECOVERY UI shown', { authModalHidden: m?.classList?.contains('hidden'), recoveryHidden: f.classList.contains('hidden') });
   document.getElementById('recovery-new-password')?.focus();
 }
 
@@ -218,6 +221,7 @@ async function handleAuthChange(event, session) {
   try {
     if (event === 'PASSWORD_RECOVERY') {
       // Supabase requires the user to set a new password after the recovery link loads
+      console.log('PASSWORD_RECOVERY fired', { event, session });
       showPasswordRecoveryForm();
       return;
     }
@@ -259,7 +263,9 @@ async function handleAuthChange(event, session) {
 
 function enterApp() {
   hideLoading();
-  closeAuthModal();
+  const recoveryForm = document.getElementById('recovery-form');
+  // Keep auth modal open while password recovery UI is visible
+  if (!(recoveryForm && !recoveryForm.classList.contains('hidden'))) closeAuthModal();
   document.getElementById('main-navbar').classList.remove('hidden');
   showAppView('feed');
   updateNavAvatar();
@@ -269,7 +275,9 @@ function enterApp() {
 }
 function exitApp() {
   hideLoading();
-  closeAuthModal();
+  const recoveryForm = document.getElementById('recovery-form');
+  // Keep auth modal open while password recovery UI is visible
+  if (!(recoveryForm && !recoveryForm.classList.contains('hidden'))) closeAuthModal();
   document.getElementById('main-navbar').classList.remove('hidden');
   document.querySelectorAll('main .view').forEach(v => v.classList.remove('active'));
   showAppView('feed');
