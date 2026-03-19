@@ -1399,7 +1399,8 @@ async function loadComments(recetaId) {
     const idx = commentIndexMap[c.id];
     const lc = likeCounts[idx] || 0;
     const il = myCommentLikes[idx] || false;
-    return `<div class="comment-item${isReply ? ' reply' : ''}" data-comment-id="${c.id}"><div class="comment-avatar">${u?.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${(u?.display_name || '?')[0].toUpperCase()}</span>`}</div><div class="comment-body"><div class="comment-header"><span class="comment-author">${esc(u?.display_name || 'Anónimo')}</span><span class="comment-time">${timeAgo(c.created_at)}</span></div><p class="comment-text">${esc(c.contenido)}</p><div class="comment-actions"><button class="comment-action-btn comment-like-btn${il ? ' liked' : ''}" data-cid="${c.id}"><svg viewBox="0 0 20 20" fill="${il ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${lc}</span></button><button class="comment-action-btn comment-reply-btn" data-cid="${c.id}" data-author="${esc(u?.display_name || 'Anónimo')}">Responder</button></div></div></div>`;
+    const authorUid = u?.id || '';
+    return `<div class="comment-item${isReply ? ' reply' : ''}" data-comment-id="${c.id}"><div class="comment-avatar" data-uid="${authorUid}">${u?.foto_perfil ? `<img src="${u.foto_perfil}" alt="">` : `<span>${(u?.display_name || '?')[0].toUpperCase()}</span>`}</div><div class="comment-body"><div class="comment-header"><span class="comment-author" data-uid="${authorUid}">${esc(u?.display_name || 'Anónimo')}</span><span class="comment-time">${timeAgo(c.created_at)}</span></div><p class="comment-text">${esc(c.contenido)}</p><div class="comment-actions"><button class="comment-action-btn comment-like-btn${il ? ' liked' : ''}" data-cid="${c.id}"><svg viewBox="0 0 20 20" fill="${il ? 'currentColor' : 'none'}"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>${lc}</span></button><button class="comment-action-btn comment-reply-btn" data-cid="${c.id}" data-author="${esc(u?.display_name || 'Anónimo')}">Responder</button></div></div></div>`;
   }
 
   let html = '';
@@ -1440,6 +1441,17 @@ async function loadComments(recetaId) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       setReplyTo(btn.dataset.cid, btn.dataset.author);
+    });
+  });
+
+  // Attach author click handlers (avatar + name)
+  list.querySelectorAll('.comment-avatar[data-uid], .comment-author[data-uid]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const uId = el.dataset.uid;
+      if (!uId) return;
+      closeModal();
+      openProfileView(uId);
     });
   });
 
