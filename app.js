@@ -799,7 +799,16 @@ async function openEditForm(id) {
   const r = await RecipeStore.get(id); if (!r) return; resetForm(); editingId = id; formTitle.textContent = 'Editar Receta';
   document.getElementById('field-id').value = r.id; document.getElementById('field-name').value = r.nombre || ''; document.getElementById('field-method').value = r.metodo || ''; document.getElementById('field-date').value = r.fecha || ''; document.getElementById('field-notes').value = r.notas || ''; document.getElementById('field-coffee-name').value = r.nombre_cafe || ''; document.getElementById('field-origin').value = r.origen || ''; document.getElementById('field-roaster').value = r.tostador || ''; document.getElementById('field-process').value = r.proceso || ''; document.getElementById('field-grinder').value = r.tipo_molino || ''; document.getElementById('field-grinder-model').value = r.modelo_molino || '';
   const gl = r.clicks_molienda || 5; document.getElementById('field-grind-level').value = gl; document.getElementById('grind-label-text').textContent = GRIND_LABELS[gl] || 'Medio'; document.getElementById('grind-number').textContent = `${gl}/10`; updateGrindSliderTrack(gl);
-  document.getElementById('field-grind-setting').value = r.grind_setting || ''; document.getElementById('field-temp').value = r.temperatura || ''; tempUnit = r.temp_unit || 'C'; document.querySelectorAll('.temp-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === tempUnit)); document.getElementById('field-water-quality').value = r.calidad_agua || ''; document.getElementById('field-coffee-grams').value = r.coffee_grams || ''; document.getElementById('field-water-grams').value = r.water_grams || ''; document.getElementById('field-yield-grams').value = r.yield_grams || ''; document.getElementById('field-total-time').value = r.tiempo_total || '';
+  document.getElementById('field-grind-setting').value = r.grind_setting || ''; document.getElementById('field-temp').value = r.temperatura || ''; tempUnit = r.temp_unit || 'C'; document.querySelectorAll('.temp-btn').forEach(b => b.classList.toggle('active', b.dataset.unit === tempUnit));   document.getElementById('field-water-quality').value = r.calidad_agua || ''; document.getElementById('field-coffee-grams').value = r.coffee_grams || ''; document.getElementById('field-water-grams').value = r.water_grams || ''; document.getElementById('field-yield-grams').value = r.yield_grams || ''; document.getElementById('field-total-time').value = r.tiempo_total || '';
+  document.getElementById('field-moka-model').value = r.moka_model || '';
+  document.getElementById('field-moka-cups').value = r.moka_cups != null ? r.moka_cups : '';
+  document.getElementById('field-moka-heat-source').value = r.moka_heat_source || '';
+  document.getElementById('field-moka-water-temp').value = r.moka_water_temp || '';
+  document.getElementById('field-moka-preheated').value = r.moka_preheated === true ? 'yes' : r.moka_preheated === false ? 'no' : '';
+  document.getElementById('field-moka-heat-level').value = r.moka_heat_level || '';
+  document.getElementById('field-moka-first-drops').value = r.moka_first_drops || '';
+  document.getElementById('field-moka-total-time').value = r.moka_total_time || r.tiempo_total || '';
+  updateMethodFields();
   if (r.tueste) { const rad = form.querySelector(`input[name="roast"][value="${r.tueste}"]`); if (rad) rad.checked = true; }
   if (r.visibilidad) { const vr = form.querySelector(`input[name="visibility"][value="${r.visibilidad}"]`); if (vr) vr.checked = true; }
   if (r.foto_url) { document.getElementById('photo-preview').src = r.foto_url; document.getElementById('photo-preview').classList.remove('hidden'); document.getElementById('photo-prompt').style.display = 'none'; }
@@ -825,6 +834,9 @@ function isFrenchPressMethod() {
 function isAeroPressMethod() {
   return document.getElementById('field-method').value === 'AeroPress';
 }
+function isMokaMethod() {
+  return document.getElementById('field-method').value === 'Moka';
+}
 
 function updateBloomFields() {
   const bloomSelect = document.getElementById('field-bloom');
@@ -842,6 +854,7 @@ function updateMethodFields() {
   const espresso = isEspressoMethod();
   const french = isFrenchPressMethod();
   const aeropress = isAeroPressMethod();
+  const moka = isMokaMethod();
 
   const waterGroup = document.getElementById('group-water-grams');
   const waterQualityGroup = document.getElementById('group-water-quality');
@@ -850,6 +863,7 @@ function updateMethodFields() {
   const yieldInput = document.getElementById('field-yield-grams');
   const waterInput = document.getElementById('field-water-grams');
   const yieldGroup = document.getElementById('field-yield-grams')?.closest('.field-group');
+  const ratioWrap = document.getElementById('ratio-display-wrap');
 
   // Espresso-specific visibility
   if (espressoSection) espressoSection.classList.toggle('hidden', !espresso);
@@ -863,20 +877,24 @@ function updateMethodFields() {
   // AeroPress–specific visibility
   document.querySelectorAll('.ap-only').forEach(el => el.classList.toggle('hidden', !aeropress));
 
-  // Water grams: hidden only for espresso
-  if (waterGroup) waterGroup.classList.toggle('hidden', espresso);
+  // Moka-specific visibility
+  document.querySelectorAll('.moka-only').forEach(el => el.classList.toggle('hidden', !moka));
+  if (ratioWrap) ratioWrap.classList.toggle('hidden', moka);
 
-  // Water quality + total time: hidden for espresso, French Press, and AeroPress
-  const hideWaterMeta = espresso || french || aeropress;
+  // Water grams: hidden for espresso and Moka
+  if (waterGroup) waterGroup.classList.toggle('hidden', espresso || moka);
+
+  // Water quality + total time: hidden for espresso, French Press, AeroPress, and Moka
+  const hideWaterMeta = espresso || french || aeropress || moka;
   if (waterQualityGroup) waterQualityGroup.classList.toggle('hidden', hideWaterMeta);
   if (totalTimeGroup) totalTimeGroup.classList.toggle('hidden', hideWaterMeta);
 
-  // Yield group: hidden for French Press and AeroPress
-  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress);
+  // Yield group: hidden for French Press, AeroPress, and Moka
+  if (yieldGroup) yieldGroup.classList.toggle('hidden', french || aeropress || moka);
 
   // Required flags
   if (yieldInput) yieldInput.required = espresso;     // required only for espresso
-  if (waterInput) waterInput.required = !espresso;    // required for non-espresso
+  if (waterInput) waterInput.required = !espresso && !moka;
 
   updateRatio();
 }
@@ -924,12 +942,13 @@ form.addEventListener('submit', async e => {
   const cg = document.getElementById('field-coffee-grams').value;
   const wg = document.getElementById('field-water-grams').value;
   const yg = document.getElementById('field-yield-grams').value;
+  const mokaTotal = document.getElementById('field-moka-total-time')?.value.trim() || null;
   let ratioVal = null;
   if (isEspressoMethod()) {
     if (parseFloat(cg) > 0 && parseFloat(yg) > 0) {
       ratioVal = `1:${(parseFloat(yg) / parseFloat(cg)).toFixed(1)}`;
     }
-  } else if (parseFloat(cg) > 0 && parseFloat(wg) > 0) {
+  } else if (!isMokaMethod() && parseFloat(cg) > 0 && parseFloat(wg) > 0) {
     ratioVal = `1:${(parseFloat(wg) / parseFloat(cg)).toFixed(1)}`;
   }
 
@@ -957,14 +976,16 @@ form.addEventListener('submit', async e => {
       grind_setting: document.getElementById('field-grind-setting').value.trim() || null,
       temperatura: document.getElementById('field-temp').value || null,
       temp_unit: tempUnit,
-      calidad_agua: document.getElementById('field-water-quality').value || null,
+      calidad_agua: isMokaMethod() ? null : (document.getElementById('field-water-quality').value || null),
       coffee_grams: cg || null,
-      water_grams: wg || null,
-      ratio: ratioVal,
-      yield_grams: yg || null,
+      water_grams: isMokaMethod() ? null : (wg || null),
+      ratio: isMokaMethod() ? null : ratioVal,
+      yield_grams: isMokaMethod() ? null : (yg || null),
       tiempo_total: (isEspressoMethod()
         ? document.getElementById('field-extraction-time').value.trim() || null
-        : document.getElementById('field-total-time').value.trim() || null),
+        : isMokaMethod()
+          ? mokaTotal
+          : document.getElementById('field-total-time').value.trim() || null),
       maquina: document.getElementById('field-machine').value.trim() || null,
       presion_bars: document.getElementById('field-pressure').value || null,
       pre_infusion_seg: document.getElementById('field-preinfusion').value || null,
@@ -980,6 +1001,16 @@ form.addEventListener('submit', async e => {
       aeropress_steep_seg: document.getElementById('field-ap-steep')?.value || null,
       aeropress_press_seg: document.getElementById('field-ap-press')?.value || null,
       aeropress_filter: document.getElementById('field-ap-filter')?.value || null,
+      moka_model: isMokaMethod() ? (document.getElementById('field-moka-model')?.value.trim() || null) : null,
+      moka_cups: isMokaMethod() && document.getElementById('field-moka-cups')?.value ? parseInt(document.getElementById('field-moka-cups').value, 10) : null,
+      moka_heat_source: isMokaMethod() ? (document.getElementById('field-moka-heat-source')?.value || null) : null,
+      moka_water_temp: isMokaMethod() ? (document.getElementById('field-moka-water-temp')?.value || null) : null,
+      moka_preheated: isMokaMethod()
+        ? (document.getElementById('field-moka-preheated')?.value === 'yes' ? true : document.getElementById('field-moka-preheated')?.value === 'no' ? false : null)
+        : null,
+      moka_heat_level: isMokaMethod() ? (document.getElementById('field-moka-heat-level')?.value || null) : null,
+      moka_first_drops: isMokaMethod() ? (document.getElementById('field-moka-first-drops')?.value.trim() || null) : null,
+      moka_total_time: isMokaMethod() ? mokaTotal : null,
       etapas
     };
     if (editingId) await RecipeStore.update(editingId, row); else await RecipeStore.insert(row);

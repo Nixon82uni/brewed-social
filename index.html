@@ -440,7 +440,7 @@
             <div class="field-row ratio-row">
               <div class="field-group"><label for="field-coffee-grams">Café (g) *</label><input type="number"
                   id="field-coffee-grams" min="0" step="0.1" placeholder="18" required /></div>
-              <div class="ratio-display-wrap">
+              <div class="ratio-display-wrap" id="ratio-display-wrap">
                 <div class="ratio-display"><span class="ratio-label">Ratio</span><span class="ratio-value"
                     id="ratio-value">—</span><span class="ratio-unit">1 : X</span></div>
               </div>
@@ -536,6 +536,75 @@
               <div class="field-group">
                 <label for="field-ap-press">Tiempo de presión (seg)</label>
                 <input type="number" id="field-ap-press" min="0" step="1" />
+              </div>
+            </div>
+            <!-- Moka specific fields -->
+            <div class="field-row moka-only hidden">
+              <div class="field-group">
+                <label for="field-moka-model">Modelo de Moka</label>
+                <input type="text" id="field-moka-model" placeholder="Ej. Bialetti 6 tazas" />
+              </div>
+              <div class="field-group">
+                <label for="field-moka-cups">Tazas</label>
+                <input type="number" id="field-moka-cups" min="1" step="1" placeholder="6" />
+              </div>
+            </div>
+            <div class="field-row moka-only hidden">
+              <div class="field-group">
+                <label for="field-moka-heat-source">Fuente de calor</label>
+                <div class="custom-select">
+                  <select id="field-moka-heat-source">
+                    <option value="">Seleccionar…</option>
+                    <option value="gas">Gas</option>
+                    <option value="electric">Eléctrica</option>
+                    <option value="induction">Inducción</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-moka-water-temp">Temperatura inicial del agua</label>
+                <div class="custom-select">
+                  <select id="field-moka-water-temp">
+                    <option value="">Seleccionar…</option>
+                    <option value="cold">Fría</option>
+                    <option value="warm">Tibia</option>
+                    <option value="hot">Caliente</option>
+                    <option value="boiling">Hirviendo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-row moka-only hidden">
+              <div class="field-group">
+                <label for="field-moka-preheated">¿Precalentaste el agua?</label>
+                <div class="custom-select">
+                  <select id="field-moka-preheated">
+                    <option value="">Seleccionar…</option>
+                    <option value="no">No</option>
+                    <option value="yes">Sí</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <label for="field-moka-heat-level">Nivel de calor</label>
+                <div class="custom-select">
+                  <select id="field-moka-heat-level">
+                    <option value="">Seleccionar…</option>
+                    <option value="low">Bajo</option>
+                    <option value="medium">Medio</option>
+                    <option value="high">Alto</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field-row moka-only hidden">
+              <div class="field-group">
+                <label for="field-moka-first-drops">Tiempo hasta primeras gotas</label>
+                <input type="text" id="field-moka-first-drops" placeholder="Ej. 2:30" />
+              </div>
+              <div class="field-group">
+                <label for="field-moka-total-time">Tiempo total</label>
+                <input type="text" id="field-moka-total-time" placeholder="Ej. 5 min" />
               </div>
             </div>
           </div>
