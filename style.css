@@ -2298,6 +2298,7 @@ select option {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 .comment-avatar img {
@@ -2330,6 +2331,7 @@ select option {
 .comment-author {
   font-size: 0.75rem;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .comment-time {
